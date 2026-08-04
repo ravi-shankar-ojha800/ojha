@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Escape: Clay & Glass</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;800;900&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body, html {
+            width: 100%; height: 100%; overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            /* Premium Soft Abstract Background */
+            background: linear-gradient(135deg, #e0e5ec 0%, #ffffff 100%);
+        }
+
+        /* Abstract ambient background blobs for Glassmorphism */
+        .ambient-blob {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6; z-index: 0;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #cce0ff; }
+        .blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: #f0e6ff; }
+
+        #game-wrapper {
+            position: relative; width: 100vw; height: 100vh; z-index: 1;
+        }
+
+        /* Glassmorphism UI Bar */
+        #ui-layer {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 800px; height: 80px;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 40px;
+            z-index: 10; border-radius: 20px;
+            
+            /* Glass Effect */
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .ui-text {
+            font-size: 20px; font-weight: 800; color: #1a1a1a;
+            text-transform: uppercase; letter-spacing: 1px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .ui-val {
+            font-size: 28px; font-weight: 900; color: #000;
+        }
+
+        canvas { width: 100vw; height: 100vh; display: block; position: absolute; top:0; left:0; z-index: 5; }
+
+        /* Glassmorphism Menus */
+        #game-screen-overlay {
+            display: flex; position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            justify-content: center; align-items: center;
+            z-index: 20; background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.5);
+            border-radius: 30px; padding: 50px; text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+            max-width: 600px;
+        }
+
+        .title-text {
+            font-size: 48px; font-weight: 900; color: #000;
+            margin-bottom: 10px; letter-spacing: -1px;
+        }
+        .subtitle-text {
+            font-size: 18px; font-weight: 600; color: #555; margin-bottom: 40px;
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+        
+        /* Claymorphism Buttons */
+        .mode-btn {
+            background: #ffffff; color: #000; font-family: 'Poppins', sans-serif;
+            font-size: 20px; font-weight: 800; border: none; padding: 20px;
+            border-radius: 15px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Soft Clay Box Shadow */
+            box-shadow: 6px 6px 12px rgba(0,0,0,0.08), -6px -6px 12px rgba(255,255,255,0.9);
+        }
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 8px 8px 16px rgba(0,0,0,0.1), -8px -8px 16px rgba(255,255,255,1);
+        }
+        .mode-btn:active {
+            transform: translateY(2px);
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), inset -4px -4px 8px rgba(255,255,255,0.9);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+
+    <div id="game-wrapper">
+        <div id="ui-layer">
+            <div class="ui-text">SCORE <span id="score" class="ui-val">0</span></div>
+            <div class="ui-text">LEVEL <span id="level" class="ui-val">1</span></div>
+            <!-- LIVES UI removed (keep internal lives logic only) -->
+        </div>
+        
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="game-screen-overlay">
+            <div class="glass-card">
+                <div class="title-text" id="overlay-title">CLAY ESCAPE</div>
+                <div class="subtitle-text" id="overlay-subtitle">THE GHOSTS ARE FASTER THAN YOU. NEVER STOP MOVING.</div>
+                <div class="btn-group">
+                    <button class="mode-btn" onclick="startGame('easy')">PLAY CASUAL (1 GHOST)</button>
+                    <button class="mode-btn" onclick="startGame('mid')">PLAY INTENSE (2 GHOSTS)</button>
+                    <button class="mode-btn" onclick="startGame('high')">PLAY EXTREME (3 GHOSTS)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d", { alpha: true });
+        
+        const scoreEl = document.getElementById("score");
+        const levelEl = document.getElementById("level");
+        // const livesEl = document.getElementById("lives"); // removed lives UI
+        const overlay = document.getElementById("game-screen-overlay");
+        const overlayTitle = document.getElementById("overlay-title");
+
+        const MAP_WIDTH = 40;  
+        const MAP_HEIGHT = 22; 
+        let tileW, tileH;
+
+        let score = 0, level = 1, lives = 3;
+        let gameOver = true, pelletsLeft = 0, globalTimer = 0;
+        let playerEvilTimer = 0;
+        let activeGhostsCount = 3;
+        
+        // EXTREME SPEEDS:
+        // Player is incredibly fast, but Ghosts are EVEN FASTER.
+        let pawmanSpeed = 0.14;       // Very fast
+        let baseGhostSpeed = 0.14;   // Match player speed
+        let ghostSpeedIncrement = 0.005; 
+
+        // Screen Shake properties (Free Will feature for impact!)
+        let shakeAmount = 0;
+
+        const complexLayout = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,3,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,3,1],
+            [1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1],
+            [1,0,0,0,0,0,1,3,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,3,1,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,0,1,1,1,1,1,0,1],
+            [1,0,1,0,0,0,0,0,0,0,1,0,1,0,1,0,0,0,0,1,1,0,0,0,0,1,0,1,0,1,0,0,0,0,0,0,0,1,0,1],
+            [1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1],
+            [1,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1],
+            [1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,4,4,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
+            [2,2,1,0,0,0,0,0,0,0,1,1,2,2,2,1,0,1,2,2,2,2,1,0,1,2,2,2,1,1,0,0,0,0,0,0,0,1,2,2],
+            [1,1,1,0,1,1,1,0,1,0,1,1,2,2,2,1,0,1,1,1,1,1,1,0,1,2,2,2,1,1,0,1,0,1,1,1,0,1,1,1],
+            [1,0,0,0,1,3,1,0,1,0,1,1,2,2,2,1,0,0,0,0,0,0,0,0,1,2,2,2,1,1,0,1,0,1,3,1,0,0,0,1],
+            [1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1],
+            [1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+            [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,0,1,0,0,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,0,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,0,1,1,1,1,1],
+            [1,0,0,0,1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,0,0,0,1],
+            [1,3,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,3,1],
+            [1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1,0,0,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+        let currentMap = [];
+
+        // Pre-rendering the complex Claymorphism 3D Blue Boxes map
+        const mapCanvas = document.createElement("canvas");
+        const mapCtx = mapCanvas.getContext("2d");
+
+        let particles = [];
+        let floatTexts = [];
+
+        // --- MAP PRE-RENDERING (CLAYMORPHISM ENGINE) ---
+        function resizeGame() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            mapCanvas.width = canvas.width; mapCanvas.height = canvas.height;
+            tileW = canvas.width / MAP_WIDTH; tileH = canvas.height / MAP_HEIGHT;
+            renderMapToOffscreen();
+        }
+        window.addEventListener('resize', resizeGame);
+
+        function drawClayRoundRect(ctx, x, y, w, h, radius, baseColor, isPillar) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + w - radius, y); ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+            ctx.lineTo(x + w, y + h - radius); ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+            ctx.lineTo(x + radius, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+            ctx.lineTo(x, y + radius); ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+
+            // Ambient Drop Shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+            ctx.shadowBlur = 8; ctx.shadowOffsetX = 4; ctx.shadowOffsetY = 4;
+            ctx.fillStyle = baseColor;
+            ctx.fill();
+
+            // Reset shadow to draw internal highlight faking 3D
+            ctx.shadowColor = 'transparent';
+            ctx.save();
+            ctx.clip();
+            let grad = ctx.createLinearGradient(x, y, x + w, y + h);
+            grad.addColorStop(0, 'rgba(255,255,255,0.4)');
+            grad.addColorStop(0.5, 'rgba(255,255,255,0)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.1)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function renderMapToOffscreen() {
+            mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+            let margin = 2;
+            let radius = Math.min(tileW, tileH) * 0.3; // Soft rounded corners
+
+            for (let r = 0; r < MAP_HEIGHT; r++) {
+                for (let c = 0; c < MAP_WIDTH; c++) {
+                    let tile = currentMap[r][c];
+                    if (tile === 1) {
+                        // Premium Clay Blue Boxes
+                        drawClayRoundRect(mapCtx, c * tileW + margin, r * tileH + margin, tileW - margin*2, tileH - margin*2, radius, '#5C88DA');
+                    } else if (tile === 4) {
+                        // Ghost Gate (Soft white glass)
+                        mapCtx.fillStyle = "rgba(255, 255, 255, 0.5)";
+                        mapCtx.fillRect(c * tileW, r * tileH + tileH/2 - 2, tileW, 4);
+                    }
+                }
+            }
+        }
+
+        // --- GAME LOGIC ---
+        function isValidMove(tx, ty, isGhost = false) {
+            if (ty < 0 || ty >= MAP_HEIGHT) return false;
+            let checkX = (tx + MAP_WIDTH) % MAP_WIDTH;
+            let val = currentMap[ty][checkX];
+            if (val === 1) return false;
+            if (val === 4 && !isGhost) return false; 
+            return true;
+        }
+
+        function getBFSPath(startX, startY, targetX, targetY, flee = false) {
+            const queue = [{x: startX, y: startY, path: []}];
+            const visited = Array.from({length: MAP_HEIGHT}, () => Array(MAP_WIDTH).fill(false));
+            visited[startY][startX] = true;
+            const dirs = [{x:0,y:-1}, {x:1,y:0}, {x:0,y:1}, {x:-1,y:0}];
+
+            let bestFleePath = null; let maxDist = -1;
+
+            while (queue.length > 0) {
+                let curr = queue.shift();
+                if (!flee && curr.x === targetX && curr.y === targetY) {
+                    return curr.path.length > 0 ? curr.path[0] : null;
+                }
+                if (flee) {
+                    let d = Math.hypot(curr.x - targetX, curr.y - targetY);
+                    if (d > maxDist && curr.path.length > 0) {
+                        maxDist = d; bestFleePath = curr.path[0];
+                    }
+                    if (curr.path.length > 8) continue; 
+                }
+
+                for (let d of dirs) {
+                    let nx = curr.x + d.x; let ny = curr.y + d.y;
+                    if (nx < 0) nx = MAP_WIDTH - 1; if (nx >= MAP_WIDTH) nx = 0;
+                    if (ny >= 0 && ny < MAP_HEIGHT && !visited[ny][nx] && isValidMove(nx, ny, true)) {
+                        visited[ny][nx] = true;
+                        queue.push({x: nx, y: ny, path: [...curr.path, {dx: d.x, dy: d.y}]});
+                    }
+                }
+            }
+            return flee ? bestFleePath : null;
+        }
+
+        // --- ENTITIES ---
+        class SmilingFace {
+            constructor() { this.reset(); }
+            reset() {
+                this.gridX = 1; this.gridY = 1;
+                this.x = this.gridX * tileW + tileW/2;
+                this.y = this.gridY * tileH + tileH/2;
+                this.dirX = 1; this.dirY = 0;
+                this.nextDirX = 1; this.nextDirY = 0;
+                this.animOffset = 0; // For bobbing
+            }
+            update() {
+                if (playerEvilTimer > 0) playerEvilTimer--;
+
+                let targetX = this.gridX * tileW + tileW/2;
+                let targetY = this.gridY * tileH + tileH/2;
+                let stepX = tileW * pawmanSpeed;
+                let stepY = tileH * pawmanSpeed;
+                let dx = targetX - this.x; let dy = targetY - this.y;
+
+                if (Math.abs(dx) <= stepX && Math.abs(dy) <= stepY) {
+                    this.x = targetX; this.y = targetY;
+
+                    if (currentMap[this.gridY][this.gridX] === 0) {
+                        currentMap[this.gridY][this.gridX] = 2; score += 10; pelletsLeft--;
+                    } else if (currentMap[this.gridY][this.gridX] === 3) {
+                        currentMap[this.gridY][this.gridX] = 2; score += 50; pelletsLeft--;
+                        // Power-up: make player evil (purple) and ghosts frightened
+                        playerEvilTimer = 350;
+                        triggerFrightenedMode(); shakeAmount = 10;
+                    }
+
+                    if (isValidMove(this.gridX + this.nextDirX, this.gridY + this.nextDirY)) {
+                        this.dirX = this.nextDirX; this.dirY = this.nextDirY;
+                    }
+                    if (isValidMove(this.gridX + this.dirX, this.gridY + this.dirY)) {
+                        this.gridX += this.dirX; this.gridY += this.dirY;
+                    } else {
+                        this.dirX = 0; this.dirY = 0;
+                    }
+
+                    if (this.gridX < 0) { this.gridX = MAP_WIDTH - 1; this.x = this.gridX * tileW + tileW/2; }
+                    else if (this.gridX >= MAP_WIDTH) { this.gridX = 0; this.x = this.gridX * tileW + tileW/2; }
+                } else {
+                    this.x += Math.sign(dx) * stepX; this.y += Math.sign(dy) * stepY;
+                }
+
+                // Bobbing animation logic
+                if(this.dirX !== 0 || this.dirY !== 0) {
+                    this.animOffset += 0.3;
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Stretch and squish based on speed (Free Will Physics addition)
+                let stretch = 1 + (pawmanSpeed * 0.5); 
+                let squish = 1 - (pawmanSpeed * 0.2);
+                if (this.dirX !== 0) ctx.scale(stretch, squish);
+                if (this.dirY !== 0) ctx.scale(squish, stretch);
+
+                // Bobbing translation
+                ctx.translate(0, Math.sin(this.animOffset) * 2);
+
+                let radius = Math.min(tileW, tileH) / 2.2;
+
+                // Soft Clay Sphere Drop Shadow
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 5;
+
+                const isEvil = playerEvilTimer > 0;
+
+                // Base Face Circle
+                ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.fillStyle = isEvil ? "#7D2AE8" : "#F4D03F";
+                ctx.fill();
+
+                // 3D Highlight for Sphere
+                ctx.shadowColor = 'transparent';
+                let grad = ctx.createRadialGradient(-radius*0.3, -radius*0.3, radius*0.1, 0, 0, radius);
+                grad.addColorStop(0, 'rgba(255,255,255,0.6)');
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = grad; ctx.fill();
+
+                // Rotate content inside to face direction safely without rotating the highlight incorrectly
+                let eyeOffsetX = this.dirX * (radius*0.3);
+                let eyeOffsetY = this.dirY * (radius*0.3);
+
+                // Eyes (Black/Purple villain face)
+                ctx.fillStyle = isEvil ? "#2A0B3D" : "#1a1a1a";
+                ctx.beginPath(); ctx.arc(-radius*0.3 + eyeOffsetX, -radius*0.2 + eyeOffsetY, radius*0.15, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(radius*0.3 + eyeOffsetX, -radius*0.2 + eyeOffsetY, radius*0.15, 0, Math.PI*2); ctx.fill();
+                
+                // Eye shines (White)
+                ctx.fillStyle = "#fff";
+                ctx.beginPath(); ctx.arc(-radius*0.35 + eyeOffsetX, -radius*0.25 + eyeOffsetY, radius*0.05, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(radius*0.25 + eyeOffsetX, -radius*0.25 + eyeOffsetY, radius*0.05, 0, Math.PI*2); ctx.fill();
+
+                // Smile / Evil mouth
+                ctx.beginPath();
+                if (isEvil) {
+                    // Angry teeth-ish jagged mouth
+                    ctx.moveTo(eyeOffsetX - radius*0.35, eyeOffsetY + radius*0.05);
+                    ctx.lineTo(eyeOffsetX - radius*0.1, eyeOffsetY + radius*0.18);
+                    ctx.lineTo(eyeOffsetX - radius*0.02, eyeOffsetY + radius*0.02);
+                    ctx.lineTo(eyeOffsetX + radius*0.06, eyeOffsetY + radius*0.16);
+                    ctx.lineTo(eyeOffsetX + radius*0.35, eyeOffsetY + radius*0.05);
+                } else {
+                    // Happy Curve
+                    ctx.arc(eyeOffsetX, eyeOffsetY + radius*0.2, radius*0.4, 0, Math.PI, false);
+                }
+                ctx.lineWidth = radius * 0.12; ctx.strokeStyle = isEvil ? "#2A0B3D" : "#1a1a1a"; ctx.lineCap = "round";
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        class Ghost {
+            constructor(baseColor, highlightColor, type) {
+                this.baseColor = baseColor;
+                this.highlightColor = highlightColor;
+                this.type = type; 
+                this.reset();
+            }
+            reset() {
+                this.gridX = 18 + this.type; this.gridY = 10;
+                this.x = this.gridX * tileW + tileW/2; this.y = this.gridY * tileH + tileH/2;
+                this.dirX = 0; this.dirY = -1;
+                this.mode = 'chase'; 
+                this.frightenedTimer = 0;
+            }
+            update() {
+                let targetX = this.gridX * tileW + tileW/2;
+                let targetY = this.gridY * tileH + tileH/2;
+                
+                let curSpeedRatio = baseGhostSpeed;
+                if(this.mode === 'frightened') curSpeedRatio *= 0.6; 
+                if(this.mode === 'eaten') curSpeedRatio = 0.3; 
+                
+                let stepX = tileW * curSpeedRatio;
+                let stepY = tileH * curSpeedRatio;
+                let dx = targetX - this.x; let dy = targetY - this.y;
+
+                if (Math.abs(dx) <= stepX && Math.abs(dy) <= stepY) {
+                    this.x = targetX; this.y = targetY;
+
+                    let nextMove = null;
+
+                    if (this.mode === 'eaten') {
+                        if (this.gridX === 19 && this.gridY === 10) {
+                            this.mode = 'chase'; this.dirX = 0; this.dirY = -1;
+                        } else {
+                            nextMove = getBFSPath(this.gridX, this.gridY, 19, 10, false);
+                        }
+                    } else if (this.mode === 'frightened') {
+                        nextMove = getBFSPath(this.gridX, this.gridY, player.gridX, player.gridY, true);
+                    } else {
+                        let tgtX = player.gridX; let tgtY = player.gridY;
+                        if (this.type === 1) { 
+                            tgtX += player.dirX * 4; tgtY += player.dirY * 4;
+                            if (tgtX < 0) tgtX = 0; if (tgtX >= MAP_WIDTH) tgtX = MAP_WIDTH-1;
+                            if (tgtY < 0) tgtY = 0; if (tgtY >= MAP_HEIGHT) tgtY = MAP_HEIGHT-1;
+                        } else if (this.type === 2) { 
+                            let dist = Math.hypot(this.gridX - player.gridX, this.gridY - player.gridY);
+                            if (dist > 6) { tgtX = Math.floor(Math.random() * MAP_WIDTH); tgtY = Math.floor(Math.random() * MAP_HEIGHT); }
+                        }
+                        nextMove = getBFSPath(this.gridX, this.gridY, tgtX, tgtY, false);
+                    }
+
+                    if (nextMove) {
+                        this.dirX = nextMove.dx; this.dirY = nextMove.dy;
+                    } else {
+                        const possibleMoves = [{x:1, y:0}, {x:-1, y:0}, {x:0, y:1}, {x:0, y:-1}];
+                        for(let m of possibleMoves) {
+                            if (m.x === -this.dirX && m.y === -this.dirY) continue;
+                            if (isValidMove(this.gridX + m.x, this.gridY + m.y, true)) {
+                                this.dirX = m.x; this.dirY = m.y; break;
+                            }
+                        }
+                    }
+
+                    this.gridX += this.dirX; this.gridY += this.dirY;
+
+                    if (this.gridX < 0) { this.gridX = MAP_WIDTH - 1; this.x = this.gridX * tileW + tileW/2; }
+                    else if (this.gridX >= MAP_WIDTH) { this.gridX = 0; this.x = this.gridX * tileW + tileW/2; }
+                } else {
+                    this.x += Math.sign(dx) * stepX; this.y += Math.sign(dy) * stepY;
+                }
+
+                if (this.mode === 'frightened') {
+                    this.frightenedTimer--;
+                    if (this.frightenedTimer <= 0) this.mode = 'chase';
+                }
+            }
+            draw() {
+                let radius = Math.min(tileW, tileH) / 2.2;
+                
+                // Hover bobbing effect
+                let hoverY = Math.sin(globalTimer * 0.1 + this.type) * 3;
+
+                ctx.save();
+                ctx.translate(this.x, this.y + hoverY);
+
+                if (this.mode === 'eaten') {
+                    // Floating Eyes returning
+                    ctx.fillStyle = "#fff";
+                    ctx.beginPath(); ctx.arc(-radius/3, 0, radius/3, 0, Math.PI*2);
+                    ctx.arc(radius/3, 0, radius/3, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = "#1a1a1a";
+                    ctx.beginPath(); ctx.arc(-radius/3 + this.dirX*2, this.dirY*2, radius/6, 0, Math.PI*2);
+                    ctx.arc(radius/3 + this.dirX*2, this.dirY*2, radius/6, 0, Math.PI*2); ctx.fill();
+                    ctx.restore(); return;
+                }
+
+                // Clay Drop Shadow
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 5;
+
+                // Color Selection
+                let color = this.baseColor;
+                if (this.mode === 'frightened') {
+                    color = (this.frightenedTimer < 120 && Math.floor(globalTimer / 8) % 2 === 0) ? "#ffffff" : "#4A90E2";
+                }
+
+                // Draw Smooth Clay Ghost Body
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(0, -radius*0.2, radius, Math.PI, 0, false);
+                ctx.lineTo(radius, radius);
+                
+                // Smooth Wavy Bottom
+                let waveCount = 3;
+                let waveWidth = (radius * 2) / waveCount;
+                let waveOffset = (globalTimer % 20) / 20 * waveWidth;
+                for(let i=0; i<waveCount; i++){
+                    ctx.quadraticCurveTo(radius - waveWidth*(i+0.5), radius + 5, radius - waveWidth*(i+1), radius);
+                }
+                ctx.lineTo(-radius, radius);
+                ctx.closePath();
+                ctx.fill();
+
+                // 3D Highlight
+                ctx.shadowColor = 'transparent';
+                ctx.save(); ctx.clip();
+                let grad = ctx.createLinearGradient(-radius, -radius, radius, radius);
+                grad.addColorStop(0, 'rgba(255,255,255,0.4)');
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = grad; ctx.fill();
+                ctx.restore();
+
+                // Eyes (Looking direction)
+                let eyeX = this.dirX * 3; let eyeY = this.dirY * 3 - radius*0.2;
+                ctx.fillStyle = "#fff";
+                ctx.beginPath(); ctx.arc(-radius*0.35 + eyeX, eyeY, radius*0.3, 0, Math.PI * 2);
+                ctx.arc(radius*0.35 + eyeX, eyeY, radius*0.3, 0, Math.PI * 2); ctx.fill();
+                
+                ctx.fillStyle = "#1a1a1a";
+                ctx.beginPath(); ctx.arc(-radius*0.35 + eyeX*1.5, eyeY + this.dirY, radius*0.12, 0, Math.PI * 2);
+                ctx.arc(radius*0.35 + eyeX*1.5, eyeY + this.dirY, radius*0.12, 0, Math.PI * 2); ctx.fill();
+
+                // Frightened face details
+                if (this.mode === 'frightened') {
+                    ctx.strokeStyle = "#1a1a1a"; ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(-radius*0.4, radius*0.4); ctx.lineTo(-radius*0.2, radius*0.2);
+                    ctx.lineTo(0, radius*0.4); ctx.lineTo(radius*0.2, radius*0.2);
+                    ctx.lineTo(radius*0.4, radius*0.4); ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        const player = new SmilingFace();
+        const allGhosts = [
+            new Ghost("#E56B6F", "#F89E9F", 0), // Pastel Ruby (Chaser)
+            new Ghost("#F3A6C7", "#F8D1E2", 1), // Pastel Pink (Ambusher)
+            new Ghost("#45C4B0", "#8BE1D6", 2)  // Soft Mint (Flanker)
+        ];
+        let ghosts = [];
+
+        function triggerFrightenedMode() {
+            ghosts.forEach(g => { if(g.mode !== 'eaten') { g.mode = 'frightened'; g.frightenedTimer = 350; } });
+        }
+
+        function drawCollectibles() {
+            for (let r = 0; r < MAP_HEIGHT; r++) {
+                for (let c = 0; c < MAP_WIDTH; c++) {
+                    let tile = currentMap[r][c];
+                    let x = c * tileW + tileW/2;
+                    let y = r * tileH + tileH/2;
+                    
+                    if (tile === 0) {
+                        // Soft clay dot
+                        ctx.fillStyle = "#C4CCD3";
+                        ctx.beginPath(); ctx.arc(x, y, Math.min(tileW, tileH)*0.15, 0, Math.PI * 2); ctx.fill();
+                    } else if (tile === 3) {
+                        // Big premium glass orb
+                        let pulse = Math.sin(globalTimer * 0.1) * 2;
+                        let rSize = Math.min(tileW, tileH)*0.35 + pulse;
+                        
+                        let radGrad = ctx.createRadialGradient(x-rSize*0.3, y-rSize*0.3, rSize*0.1, x, y, rSize);
+                        radGrad.addColorStop(0, '#ffffff'); radGrad.addColorStop(0.5, '#A0C4FF'); radGrad.addColorStop(1, 'rgba(255,255,255,0)');
+                        
+                        ctx.fillStyle = radGrad;
+                        ctx.beginPath(); ctx.arc(x, y, rSize, 0, Math.PI * 2); ctx.fill();
+                    }
+                }
+            }
+        }
+
+        function checkCollisions() {
+            ghosts.forEach(ghost => {
+                let d = Math.hypot(player.x - ghost.x, player.y - ghost.y);
+                if (d < Math.min(tileW, tileH) * 0.8) {
+                    if (ghost.mode === 'frightened') {
+                        score += 500; ghost.mode = 'eaten'; shakeAmount = 8;
+                    } else if (ghost.mode === 'chase') {
+                        lives--; shakeAmount = 15;
+                        baseGhostSpeed += ghostSpeedIncrement; 
+                        
+                        if (lives <= 0) {
+                            gameOver = true;
+                            overlayTitle.innerText = "CAPTURED!";
+                            document.getElementById("overlay-subtitle").innerText = `SCORE: ${score}. YOU COULDN'T OUTRUN THEM.`;
+                            overlay.style.display = "flex";
+                        } else {
+                            resetPositions();
+                        }
+                    }
+                }
+            });
+        }
+
+        function checkLevelProgression() {
+            if (pelletsLeft <= 0) {
+                level++; score += 1000; shakeAmount = 10;
+                baseGhostSpeed += ghostSpeedIncrement;
+                pawmanSpeed = Math.min(pawmanSpeed + 0.003, 0.18); 
+                currentMap = JSON.parse(JSON.stringify(complexLayout));
+                initPellets(); resetPositions(); renderMapToOffscreen();
+            }
+        }
+
+        function initPellets() {
+            pelletsLeft = 0;
+            for(let r=0; r<MAP_HEIGHT; r++) {
+                for(let c=0; c<MAP_WIDTH; c++) {
+                    if(currentMap[r][c] === 0 || currentMap[r][c] === 3) pelletsLeft++;
+                }
+            }
+        }
+
+        function resetPositions() {
+            player.reset(); ghosts.forEach(g => g.reset());
+        }
+
+        function startGame(mode) {
+            // IMPORTANT: set the map BEFORE resizing/rendering,
+            // because resizeGame() calls renderMapToOffscreen() which reads currentMap.
+            currentMap = JSON.parse(JSON.stringify(complexLayout));
+
+            resizeGame();
+
+            if (mode === 'easy') activeGhostsCount = 1;
+            else if (mode === 'mid') activeGhostsCount = 2;
+            else activeGhostsCount = 3;
+
+            ghosts = allGhosts.slice(0, activeGhostsCount);
+            
+            score = 0; level = 1; lives = 3;
+            baseGhostSpeed = 0.14;
+            pawmanSpeed = 0.14;
+
+            playerEvilTimer = 0;
+            initPellets();
+            resetPositions();
+            
+            gameOver = false;
+            overlay.style.display = "none";
+
+            // Boot frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener("keydown", e => {
+            if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
+            switch(e.key) {
+                case "ArrowUp": case "w": case "W":    player.nextDirX = 0;  player.nextDirY = -1; break;
+                case "ArrowDown": case "s": case "S":  player.nextDirX = 0;  player.nextDirY = 1;  break;
+                case "ArrowLeft": case "a": case "A":  player.nextDirX = -1; player.nextDirY = 0;  break;
+                case "ArrowRight": case "d": case "D": player.nextDirX = 1;  player.nextDirY = 0;  break;
+            }
+        });
+
+        function gameLoop() {
+            if (gameOver) return;
+            globalTimer++;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Screen Shake Effect
+            ctx.save();
+            if (shakeAmount > 0) {
+                let sx = (Math.random() - 0.5) * shakeAmount;
+                let sy = (Math.random() - 0.5) * shakeAmount;
+                ctx.translate(sx, sy);
+                shakeAmount *= 0.9;
+                if(shakeAmount < 0.5) shakeAmount = 0;
+            }
+
+            ctx.drawImage(mapCanvas, 0, 0);
+
+            player.update(); ghosts.forEach(g => g.update());
+            checkCollisions(); checkLevelProgression();
+
+            drawCollectibles();
+            player.draw();
+            ghosts.forEach(g => g.draw());
+
+            ctx.restore();
+
+            // Update Glass UI
+            scoreEl.innerText = score;
+            levelEl.innerText = level;
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        resizeGame();
+    </script>
+</body>
+</html>

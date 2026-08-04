@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyber Pulse - 3D Music Tiles Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      background: #05050d;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+    }
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    /* UI Overlay */
+    #ui-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 30px;
+    }
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .score-box {
+      background: rgba(15, 15, 35, 0.65);
+      border: 1px solid rgba(0, 255, 230, 0.3);
+      box-shadow: 0 0 15px rgba(0, 255, 230, 0.2);
+      backdrop-filter: blur(8px);
+      padding: 12px 24px;
+      border-radius: 12px;
+    }
+    .score-title {
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: #88aaff;
+      text-transform: uppercase;
+    }
+    .score-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: #00ffea;
+      text-shadow: 0 0 10px rgba(0, 255, 234, 0.8);
+    }
+    
+    /* Overlay Screen (Start / Game Over) */
+    #overlay-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 5, 15, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      pointer-events: auto;
+      transition: opacity 0.5s ease;
+    }
+    h1 {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      background: linear-gradient(45deg, #ff007f, #00ffea);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    p.subtitle {
+      color: #a0a5c0;
+      font-size: 16px;
+      margin-bottom: 40px;
+      letter-spacing: 1px;
+    }
+    .start-btn {
+      background: linear-gradient(135deg, #ff007f, #7928ca);
+      border: none;
+      color: white;
+      padding: 16px 48px;
+      font-size: 20px;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(255, 0, 127, 0.5);
+      transition: all 0.2s ease;
+    }
+    .start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 45px rgba(255, 0, 127, 0.8);
+    }
+    .controls-hint {
+      margin-top: 30px;
+      color: #606580;
+      font-size: 13px;
+    }
+  </style>
+  <!-- Three.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <div id="ui-container">
+    <div class="hud">
+      <div class="score-box">
+        <div class="score-title">Score</div>
+        <div class="score-value" id="score">0</div>
+      </div>
+      <div class="score-box" style="text-align: right;">
+        <div class="score-title">Streak</div>
+        <div class="score-value" id="streak" style="color: #ff007f; text-shadow: 0 0 10px rgba(255, 0, 127, 0.8);">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay-screen">
+    <h1 id="title">CYBER PULSE 3D</h1>
+    <p class="subtitle" id="subtitle">Bounce on glowing tiles to the beat!</p>
+    <button class="start-btn" id="start-btn">PLAY GAME</button>
+    <p class="controls-hint">Use <b>Left / Right Arrow Keys</b> or <b>A / D</b> to move</p>
+  </div>
+
+  <script>
+    // --- AUDIO SYNTHESIS ENGINE (Web Audio API) ---
+    const AudioEngine = {
+      ctx: null,
+      bpm: 125,
+      init() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      },
+      playSynthNote(freq, type = 'sine', duration = 0.3) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+        
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      },
+      playHitSound(combo) {
+        // Musical scale (Pentatonic)
+        const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
+        const noteIndex = combo % notes.length;
+        this.playSynthNote(notes[noteIndex], 'triangle', 0.4);
+      },
+      playMissSound() {
+        this.playSynthNote(120, 'sawtooth', 0.5);
+      }
+    };
+
+    // --- GAME ENGINE ---
+    const Game = {
+      scene: null,
+      camera: null,
+      renderer: null,
+      ball: null,
+      ballGlow: null,
+      tiles: [],
+      particles: [],
+      lanes: [-2.2, 0, 2.2], // 3 Lanes
+      currentLane: 1, // Start middle
+      targetX: 0,
+      speed: 0.35,
+      score: 0,
+      streak: 0,
+      isPlaying: false,
+      tileZDistance: 6,
+      bounceProgress: 0,
+      bounceSpeed: 0.08,
+      lastTileHit: null,
+
+      init() {
+        const container = document.getElementById('canvas-container');
+
+        // Scene Setup
+        this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.FogExp2(0x050510, 0.03);
+
+        // Camera Setup (Cinematic perspective)
+        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.position.set(0, 5, 9);
+        this.camera.rotation.x = -0.35;
+
+        // Renderer Setup
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        container.appendChild(this.renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+        this.scene.add(ambientLight);
+
+        // Dynamic Spotlight for Cinematic Feel
+        this.spotLight = new THREE.SpotLight(0x00ffea, 2);
+        this.spotLight.position.set(0, 15, 5);
+        this.spotLight.angle = Math.PI / 4;
+        this.spotLight.penumbra = 0.8;
+        this.scene.add(this.spotLight);
+
+        // Create Glowing Player Ball
+        this.createBall();
+
+        // Create Background Horizon Elements
+        this.createEnvironment();
+
+        // Event Listeners
+        window.addEventListener('resize', () => this.onWindowResize());
+        document.addEventListener('keydown', (e) => this.handleControls(e));
+
+        document.getElementById('start-btn').addEventListener('click', () => this.start());
+
+        // Animation Loop
+        this.animate();
+      },
+
+      createBall() {
+        const geometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const material = new THREE.MeshStandardMaterial({
+          color: 0xff007f,
+          emissive: 0xff007f,
+          emissiveIntensity: 1,
+          roughness: 0.1,
+          metalness: 0.8
+        });
+
+        this.ball = new THREE.Mesh(geometry, material);
+        this.ball.position.set(0, 0.5, 0);
+        this.scene.add(this.ball);
+
+        // Point light attached to ball for local dynamic lighting
+        const ballLight = new THREE.PointLight(0xff007f, 3, 8);
+        this.ball.add(ballLight);
+      },
+
+      createEnvironment() {
+        // Grid floor in distance for synthwave aesthetic
+        const gridHelper = new THREE.GridHelper(200, 50, 0xff007f, 0x111133);
+        gridHelper.position.y = -1;
+        gridHelper.position.z = -50;
+        this.scene.add(gridHelper);
+      },
+
+      spawnInitialTiles() {
+        // Clear existing tiles
+        this.tiles.forEach(t => this.scene.remove(t.mesh));
+        this.tiles = [];
+
+        // Spawn consecutive tiles leading forward
+        for (let i = 0; i < 15; i++) {
+          const laneIndex = Math.floor(Math.random() * 3);
+          this.createTile(laneIndex, -i * this.tileZDistance);
+        }
+      },
+
+      createTile(laneIndex, zPos) {
+        const width = 1.8;
+        const height = 0.2;
+        const depth = 2.2;
+
+        const geometry = new THREE.BoxGeometry(width, height, depth);
+        
+        // Glowing Neon Material
+        const material = new THREE.MeshStandardMaterial({
+          color: 0x0a0a20,
+          emissive: 0x00ffea,
+          emissiveIntensity: 0.6,
+          roughness: 0.2
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(this.lanes[laneIndex], 0, zPos);
+
+        // Add a subtle outer glow frame
+        const edges = new THREE.EdgesGeometry(geometry);
+        const lineMat = new THREE.LineBasicMaterial({ color: 0x00ffea, linewidth: 2 });
+        const wireframe = new THREE.LineSegments(edges, lineMat);
+        mesh.add(wireframe);
+
+        this.scene.add(mesh);
+        this.tiles.push({ mesh, laneIndex, hit: false });
+      },
+
+      createParticleBurst(position) {
+        const particleCount = 20;
+        const geometry = new THREE.BufferGeometry();
+        const positions = [];
+        const velocities = [];
+
+        for (let i = 0; i < particleCount; i++) {
+          positions.push(position.x, position.y + 0.2, position.z);
+          velocities.push(
+            (Math.random() - 0.5) * 0.3,
+            Math.random() * 0.3 + 0.1,
+            (Math.random() - 0.5) * 0.3
+          );
+        }
+
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        const material = new THREE.PointsMaterial({
+          color: 0x00ffea,
+          size: 0.15,
+          transparent: true,
+          opacity: 1
+        });
+
+        const particleSystem = new THREE.Points(geometry, material);
+        this.scene.add(particleSystem);
+
+        this.particles.push({
+          system: particleSystem,
+          velocities,
+          life: 1.0
+        });
+      },
+
+      handleControls(e) {
+        if (!this.isPlaying) return;
+
+        if ((e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') && this.currentLane > 0) {
+          this.currentLane--;
+        } else if ((e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') && this.currentLane < 2) {
+          this.currentLane++;
+        }
+        this.targetX = this.lanes[this.currentLane];
+      },
+
+      start() {
+        AudioEngine.init();
+        this.score = 0;
+        this.streak = 0;
+        this.currentLane = 1;
+        this.targetX = this.lanes[1];
+        this.bounceProgress = 0;
+        this.isPlaying = true;
+
+        document.getElementById('score').innerText = '0';
+        document.getElementById('streak').innerText = '0';
+        document.getElementById('overlay-screen').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('overlay-screen').style.display = 'none';
+        }, 500);
+
+        this.spawnInitialTiles();
+      },
+
+      gameOver() {
+        this.isPlaying = false;
+        AudioEngine.playMissSound();
+
+        const overlay = document.getElementById('overlay-screen');
+        document.getElementById('title').innerText = 'GAME OVER';
+        document.getElementById('subtitle').innerText = `Final Score: ${this.score} | Max Combo: ${this.streak}`;
+        document.getElementById('start-btn').innerText = 'TRY AGAIN';
+
+        overlay.style.display = 'flex';
+        setTimeout(() => {
+          overlay.style.opacity = '1';
+        }, 10);
+      },
+
+      update() {
+        if (!this.isPlaying) return;
+
+        // Smooth X Translation (Lane changing)
+        this.ball.position.x += (this.targetX - this.ball.position.x) * 0.2;
+
+        // Ball Bounce Logic (Sinusoidal Arc)
+        this.bounceProgress += this.bounceSpeed;
+        this.ball.position.y = Math.abs(Math.sin(this.bounceProgress)) * 2.5 + 0.5;
+
+        // Move Tiles Forward (Creates movement illusion)
+        const moveDistance = this.speed;
+        
+        for (let i = 0; i < this.tiles.length; i++) {
+          const tile = this.tiles[i];
+          tile.mesh.position.z += moveDistance;
+
+          // Check Bounce Impact / Collision Detection
+          if (
+            tile.mesh.position.z > -0.8 &&
+            tile.mesh.position.z < 0.8 &&
+            !tile.hit
+          ) {
+            // Ball is near the hit zone
+            if (this.currentLane === tile.laneIndex) {
+              // SUCCESS HIT
+              tile.hit = true;
+              tile.mesh.material.emissive.setHex(0xff007f); // Flash tile pink
+              this.createParticleBurst(this.ball.position);
+              
+              this.score += 10 + this.streak * 2;
+              this.streak++;
+              
+              document.getElementById('score').innerText = this.score;
+              document.getElementById('streak').innerText = this.streak;
+
+              AudioEngine.playHitSound(this.streak);
+            }
+          }
+
+          // If a tile passes behind camera without being hit -> Check Game Over
+          if (tile.mesh.position.z > 3 && !tile.hit) {
+            this.gameOver();
+            return;
+          }
+        }
+
+        // Recycling Tiles
+        if (this.tiles[0].mesh.position.z > 5) {
+          const oldTile = this.tiles.shift();
+          this.scene.remove(oldTile.mesh);
+
+          const lastTileZ = this.tiles[this.tiles.length - 1].mesh.position.z;
+          const newLane = Math.floor(Math.random() * 3);
+          this.createTile(newLane, lastTileZ - this.tileZDistance);
+        }
+
+        // Particle Updates
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          const positions = p.system.geometry.attributes.position.array;
+
+          for (let j = 0; j < positions.length / 3; j++) {
+            positions[j * 3] += p.velocities[j * 3];
+            positions[j * 3 + 1] += p.velocities[j * 3 + 1];
+            positions[j * 3 + 2] += p.velocities[j * 3 + 2];
+          }
+
+          p.system.geometry.attributes.position.needsUpdate = true;
+          p.life -= 0.04;
+          p.system.material.opacity = p.life;
+
+          if (p.life <= 0) {
+            this.scene.remove(p.system);
+            this.particles.splice(i, 1);
+          }
+        }
+
+        // Camera Follow Dynamic Effect
+        this.camera.position.x = this.ball.position.x * 0.3;
+      },
+
+      animate() {
+        requestAnimationFrame(() => this.animate());
+        this.update();
+        this.renderer.render(this.scene, this.camera);
+      },
+
+      onWindowResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    };
+
+    // Initialize Game on Load
+    window.onload = () => {
+      Game.init();
+    };
+  </script>
+</body>
+</html>

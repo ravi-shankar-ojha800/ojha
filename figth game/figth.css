@@ -1,0 +1,44 @@
+/* ================================================================
+   FIGTH ADVENTURE — RETRO PLATFORMER CSS STYLESHEET
+   ================================================================ */
+
+/* Zero out styles for a clean application viewport layout */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #0a0a12;
+    color: #ffffff;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#game-viewport-container {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+    position: relative;
+    border-radius: 0;
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    /* Enforce rigid crisp rendering architecture for 2D pixel art textures */
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
