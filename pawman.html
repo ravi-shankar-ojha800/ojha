@@ -1,726 +1,1076 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Escape: Clay & Glass</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;800;900&display=swap');
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body, html {
-            width: 100%; height: 100%; overflow: hidden;
-            font-family: 'Poppins', sans-serif;
-            /* Premium Soft Abstract Background */
-            background: linear-gradient(135deg, #e0e5ec 0%, #ffffff 100%);
-        }
-
-        /* Abstract ambient background blobs for Glassmorphism */
-        .ambient-blob {
-            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6; z-index: 0;
-        }
-        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #cce0ff; }
-        .blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: #f0e6ff; }
-
-        #game-wrapper {
-            position: relative; width: 100vw; height: 100vh; z-index: 1;
-        }
-
-        /* Glassmorphism UI Bar */
-        #ui-layer {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 800px; height: 80px;
-            display: flex; justify-content: space-between; align-items: center; padding: 0 40px;
-            z-index: 10; border-radius: 20px;
-            
-            /* Glass Effect */
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        }
-
-        .ui-text {
-            font-size: 20px; font-weight: 800; color: #1a1a1a;
-            text-transform: uppercase; letter-spacing: 1px;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .ui-val {
-            font-size: 28px; font-weight: 900; color: #000;
-        }
-
-        canvas { width: 100vw; height: 100vh; display: block; position: absolute; top:0; left:0; z-index: 5; }
-
-        /* Glassmorphism Menus */
-        #game-screen-overlay {
-            display: flex; position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            justify-content: center; align-items: center;
-            z-index: 20; background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.6);
-            border: 2px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.5);
-            border-radius: 30px; padding: 50px; text-align: center;
-            display: flex; flex-direction: column; align-items: center;
-            max-width: 600px;
-        }
-
-        .title-text {
-            font-size: 48px; font-weight: 900; color: #000;
-            margin-bottom: 10px; letter-spacing: -1px;
-        }
-        .subtitle-text {
-            font-size: 18px; font-weight: 600; color: #555; margin-bottom: 40px;
-        }
-
-        .btn-group { display: flex; flex-direction: column; gap: 20px; width: 100%; }
-        
-        /* Claymorphism Buttons */
-        .mode-btn {
-            background: #ffffff; color: #000; font-family: 'Poppins', sans-serif;
-            font-size: 20px; font-weight: 800; border: none; padding: 20px;
-            border-radius: 15px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            
-            /* Soft Clay Box Shadow */
-            box-shadow: 6px 6px 12px rgba(0,0,0,0.08), -6px -6px 12px rgba(255,255,255,0.9);
-        }
-        .mode-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 8px 8px 16px rgba(0,0,0,0.1), -8px -8px 16px rgba(255,255,255,1);
-        }
-        .mode-btn:active {
-            transform: translateY(2px);
-            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), inset -4px -4px 8px rgba(255,255,255,0.9);
-        }
-
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Backrooms - Pure Terror</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #000;
+      font-family: 'Courier New', Courier, monospace;
+      user-select: none;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+    }
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.98);
+      color: #ffe66d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      cursor: pointer;
+    }
+    #overlay h1 {
+      font-size: 3.5rem;
+      letter-spacing: 8px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px #c2a729;
+      font-weight: bold;
+    }
+    #overlay p {
+      font-size: 1.1rem;
+      color: #e0e0e0;
+      margin-top: 8px;
+    }
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 4px;
+      height: 4px;
+      background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 5;
+    }
+    #subtitles {
+      position: absolute;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #ffffff;
+      font-size: 2rem;
+      font-weight: bold;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px #000, 0 0 20px #000, 2px 2px 4px #000;
+      z-index: 6;
+      pointer-events: none;
+      width: 80%;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="ambient-blob blob-1"></div>
-    <div class="ambient-blob blob-2"></div>
+  <div id="overlay">
+    <h1><b>THE BACKROOMS</b></h1>
+    <p><b>[ CLICK ANYWHERE TO ENTER ]</b></p>
+    <p style="font-size: 0.9rem; color: #a0a0a0; margin-top: 20px;">
+      <b>WASD</b> Move | <b>SHIFT</b> Sprint | <b>MOUSE</b> Look Around
+    </p>
+  </div>
 
-    <div id="game-wrapper">
-        <div id="ui-layer">
-            <div class="ui-text">SCORE <span id="score" class="ui-val">0</span></div>
-            <div class="ui-text">LEVEL <span id="level" class="ui-val">1</span></div>
-            <!-- LIVES UI removed (keep internal lives logic only) -->
-        </div>
-        
-        <canvas id="gameCanvas"></canvas>
-        
-        <div id="game-screen-overlay">
-            <div class="glass-card">
-                <div class="title-text" id="overlay-title">CLAY ESCAPE</div>
-                <div class="subtitle-text" id="overlay-subtitle">THE GHOSTS ARE FASTER THAN YOU. NEVER STOP MOVING.</div>
-                <div class="btn-group">
-                    <button class="mode-btn" onclick="startGame('easy')">PLAY CASUAL (1 GHOST)</button>
-                    <button class="mode-btn" onclick="startGame('mid')">PLAY INTENSE (2 GHOSTS)</button>
-                    <button class="mode-btn" onclick="startGame('high')">PLAY EXTREME (3 GHOSTS)</button>
-                </div>
-            </div>
-        </div>
-    </div>
+  <div id="crosshair"></div>
+  <div id="subtitles"></div>
+  <div id="canvas-container"></div>
 
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d", { alpha: true });
-        
-        const scoreEl = document.getElementById("score");
-        const levelEl = document.getElementById("level");
-        // const livesEl = document.getElementById("lives"); // removed lives UI
-        const overlay = document.getElementById("game-screen-overlay");
-        const overlayTitle = document.getElementById("overlay-title");
+  <!-- Three.js & Post-Processing Dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
 
-        const MAP_WIDTH = 40;  
-        const MAP_HEIGHT = 22; 
-        let tileW, tileH;
+  <script>
+    // --- AUDIO & SUBTITLE SYSTEM ---
+    let introAudio = null;
+    let bgMusic = null;
+    let monsterChaseAudio = null;
+    let introStarted = false;
 
-        let score = 0, level = 1, lives = 3;
-        let gameOver = true, pelletsLeft = 0, globalTimer = 0;
-        let playerEvilTimer = 0;
-        let activeGhostsCount = 3;
-        
-        // EXTREME SPEEDS:
-        // Player is incredibly fast, but Ghosts are EVEN FASTER.
-        let pawmanSpeed = 0.14;       // Very fast
-        let baseGhostSpeed = 0.14;   // Match player speed
-        let ghostSpeedIncrement = 0.005; 
+    const subtitleEl = document.getElementById('subtitles');
 
-        // Screen Shake properties (Free Will feature for impact!)
-        let shakeAmount = 0;
+    const subtitleTimings = [
+      { time: 0.0, text: "This is not real." },
+      { time: 1.0, text: "It's just a dream." },
+      { time: 3.0, text: "SPK_1: Please." },
+      { time: 4.0, text: "Please wake up." },
+      { time: 6.0, text: "Wake up." },
+      { time: 7.0, text: "Wake up." }
+    ];
 
-        const complexLayout = [
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,3,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,3,1],
-            [1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1],
-            [1,0,0,0,0,0,1,3,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,3,1,0,0,0,0,0,1],
-            [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,0,1,1,1,1,1,0,1],
-            [1,0,1,0,0,0,0,0,0,0,1,0,1,0,1,0,0,0,0,1,1,0,0,0,0,1,0,1,0,1,0,0,0,0,0,0,0,1,0,1],
-            [1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1],
-            [1,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1],
-            [1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,4,4,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
-            [2,2,1,0,0,0,0,0,0,0,1,1,2,2,2,1,0,1,2,2,2,2,1,0,1,2,2,2,1,1,0,0,0,0,0,0,0,1,2,2],
-            [1,1,1,0,1,1,1,0,1,0,1,1,2,2,2,1,0,1,1,1,1,1,1,0,1,2,2,2,1,1,0,1,0,1,1,1,0,1,1,1],
-            [1,0,0,0,1,3,1,0,1,0,1,1,2,2,2,1,0,0,0,0,0,0,0,0,1,2,2,2,1,1,0,1,0,1,3,1,0,0,0,1],
-            [1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1],
-            [1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
-            [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,0,1,0,0,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
-            [1,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1],
-            [1,1,1,1,1,0,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,0,1,1,1,1,1],
-            [1,0,0,0,1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,0,0,0,1],
-            [1,3,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,3,1],
-            [1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1,0,0,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1],
-            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-        ];
-        let currentMap = [];
+    function initAudio() {
+      if (introStarted) return;
+      introStarted = true;
 
-        // Pre-rendering the complex Claymorphism 3D Blue Boxes map
-        const mapCanvas = document.createElement("canvas");
-        const mapCtx = mapCanvas.getContext("2d");
+      bgMusic = new Audio('ASSETS/backrooms.mp3');
+      bgMusic.loop = true;
+      bgMusic.volume = 0.55;
 
-        let particles = [];
-        let floatTexts = [];
+      monsterChaseAudio = new Audio('ASSETS/backrooms-entity-sound.mp3');
+      monsterChaseAudio.loop = true;
+      monsterChaseAudio.volume = 1.0;
 
-        // --- MAP PRE-RENDERING (CLAYMORPHISM ENGINE) ---
-        function resizeGame() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            mapCanvas.width = canvas.width; mapCanvas.height = canvas.height;
-            tileW = canvas.width / MAP_WIDTH; tileH = canvas.height / MAP_HEIGHT;
-            renderMapToOffscreen();
+      introAudio = new Audio('ASSETS/this_is_not_real.mp3');
+      introAudio.volume = 0.9;
+
+      introAudio.addEventListener('ended', () => {
+        subtitleEl.innerText = "";
+        bgMusic.play().catch(() => {});
+      });
+
+      introAudio.addEventListener('timeupdate', () => {
+        const currentTime = introAudio.currentTime;
+        let currentText = "";
+        for (let i = 0; i < subtitleTimings.length; i++) {
+          if (currentTime >= subtitleTimings[i].time) {
+            currentText = subtitleTimings[i].text;
+          }
         }
-        window.addEventListener('resize', resizeGame);
+        subtitleEl.innerText = currentText;
+      });
 
-        function drawClayRoundRect(ctx, x, y, w, h, radius, baseColor, isPillar) {
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + w - radius, y); ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-            ctx.lineTo(x + w, y + h - radius); ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-            ctx.lineTo(x + radius, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
-            ctx.lineTo(x, y + radius); ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
+      introAudio.play().catch(() => {
+        bgMusic.play().catch(() => {});
+      });
+    }
 
-            // Ambient Drop Shadow
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-            ctx.shadowBlur = 8; ctx.shadowOffsetX = 4; ctx.shadowOffsetY = 4;
-            ctx.fillStyle = baseColor;
-            ctx.fill();
+    function playMonsterChaseAudio() {
+      if (monsterChaseAudio && monsterChaseAudio.paused) {
+        monsterChaseAudio.currentTime = 0;
+        monsterChaseAudio.play().catch(() => {});
+      }
+    }
 
-            // Reset shadow to draw internal highlight faking 3D
-            ctx.shadowColor = 'transparent';
-            ctx.save();
-            ctx.clip();
-            let grad = ctx.createLinearGradient(x, y, x + w, y + h);
-            grad.addColorStop(0, 'rgba(255,255,255,0.4)');
-            grad.addColorStop(0.5, 'rgba(255,255,255,0)');
-            grad.addColorStop(1, 'rgba(0,0,0,0.1)');
-            ctx.fillStyle = grad;
-            ctx.fill();
-            ctx.restore();
+    function stopMonsterChaseAudio() {
+      if (monsterChaseAudio && !monsterChaseAudio.paused) {
+        monsterChaseAudio.pause();
+        monsterChaseAudio.currentTime = 0;
+      }
+    }
+
+    // --- TEXTURE GENERATORS ---
+    function createWallpaperTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#a38f2e';
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      ctx.strokeStyle = '#8a7722';
+      ctx.lineWidth = 4;
+      const tileSize = 64;
+
+      for (let x = 0; x <= 1024; x += tileSize) {
+        for (let y = 0; y <= 1024; y += tileSize) {
+          ctx.beginPath();
+          ctx.moveTo(x + tileSize / 2, y);
+          ctx.lineTo(x + tileSize, y + tileSize / 2);
+          ctx.lineTo(x + tileSize / 2, y + tileSize);
+          ctx.lineTo(x, y + tileSize / 2);
+          ctx.closePath();
+          ctx.stroke();
+
+          ctx.fillStyle = '#7a681c';
+          ctx.fillRect(x + tileSize / 2 - 3, y + tileSize / 2 - 3, 6, 6);
         }
+      }
 
-        function renderMapToOffscreen() {
-            mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-            let margin = 2;
-            let radius = Math.min(tileW, tileH) * 0.3; // Soft rounded corners
+      const gradient = ctx.createLinearGradient(0, 1024, 0, 650);
+      gradient.addColorStop(0, 'rgba(15, 12, 3, 0.95)');
+      gradient.addColorStop(0.3, 'rgba(35, 28, 8, 0.5)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 650, 1024, 374);
 
-            for (let r = 0; r < MAP_HEIGHT; r++) {
-                for (let c = 0; c < MAP_WIDTH; c++) {
-                    let tile = currentMap[r][c];
-                    if (tile === 1) {
-                        // Premium Clay Blue Boxes
-                        drawClayRoundRect(mapCtx, c * tileW + margin, r * tileH + margin, tileW - margin*2, tileH - margin*2, radius, '#5C88DA');
-                    } else if (tile === 4) {
-                        // Ghost Gate (Soft white glass)
-                        mapCtx.fillStyle = "rgba(255, 255, 255, 0.5)";
-                        mapCtx.fillRect(c * tileW, r * tileH + tileH/2 - 2, tileW, 4);
-                    }
-                }
-            }
+      for (let i = 0; i < 30000; i++) {
+        const nx = Math.random() * 1024;
+        const ny = Math.random() * 1024;
+        ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.12})`;
+        ctx.fillRect(nx, ny, 2, 2);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      return texture;
+    }
+
+    function createCarpetTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#5c5220';
+      ctx.fillRect(0, 0, 512, 512);
+
+      for (let i = 0; i < 60000; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const shade = Math.random() * 30 - 15;
+        ctx.fillStyle = `rgba(${90 + shade}, ${80 + shade}, ${32 + shade}, 0.3)`;
+        ctx.fillRect(x, y, 2, 2);
+      }
+
+      for (let i = 0; i < 45; i++) {
+        const px = Math.random() * 512;
+        const py = Math.random() * 512;
+        const rad = 25 + Math.random() * 70;
+        const stainGrad = ctx.createRadialGradient(px, py, 0, px, py, rad);
+        stainGrad.addColorStop(0, 'rgba(12, 10, 2, 0.65)');
+        stainGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = stainGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, rad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      return texture;
+    }
+
+    function createCeilingTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#5e5942';
+      ctx.fillRect(0, 0, 512, 512);
+
+      ctx.strokeStyle = '#1a1810';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(0, 0, 512, 512);
+
+      for (let i = 0; i < 8000; i++) {
+        ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.22})`;
+        ctx.fillRect(Math.random() * 512, Math.random() * 512, 3, 3);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      return texture;
+    }
+
+    function createWaterNormalMap() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = 'rgb(128,128,255)';
+      ctx.fillRect(0, 0, 256, 256);
+
+      for (let x = 0; x < 256; x += 8) {
+        for (let y = 0; y < 256; y += 8) {
+          const nx = 128 + (Math.random() * 40 - 20);
+          const ny = 128 + (Math.random() * 40 - 20);
+          ctx.fillStyle = `rgb(${nx},${ny},255)`;
+          ctx.fillRect(x, y, 8, 8);
         }
+      }
 
-        // --- GAME LOGIC ---
-        function isValidMove(tx, ty, isGhost = false) {
-            if (ty < 0 || ty >= MAP_HEIGHT) return false;
-            let checkX = (tx + MAP_WIDTH) % MAP_WIDTH;
-            let val = currentMap[ty][checkX];
-            if (val === 1) return false;
-            if (val === 4 && !isGhost) return false; 
-            return true;
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      return texture;
+    }
+
+    // --- SCENE SETUP ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+
+    scene.background = new THREE.Color(0x020201);
+    scene.fog = new THREE.FogExp2(0x020201, 0.055);
+
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.y = 1.65;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.8;
+    container.appendChild(renderer.domElement);
+
+    // --- CONTROLS ---
+    const controls = new THREE.PointerLockControls(camera, document.body);
+    const overlay = document.getElementById('overlay');
+
+    overlay.addEventListener('click', () => {
+      controls.lock();
+      initAudio();
+    });
+    controls.addEventListener('lock', () => overlay.style.display = 'none');
+    controls.addEventListener('unlock', () => overlay.style.display = 'flex');
+
+    // --- MATERIALS ---
+    const wallTex = createWallpaperTexture();
+    wallTex.repeat.set(1, 1);
+
+    const carpetTex = createCarpetTexture();
+    carpetTex.repeat.set(2, 2);
+
+    const ceilingTex = createCeilingTexture();
+    ceilingTex.repeat.set(1, 1);
+
+    const waterNorm = createWaterNormalMap();
+    waterNorm.repeat.set(4, 4);
+
+    const wallMaterial = new THREE.MeshStandardMaterial({
+      map: wallTex,
+      roughness: 0.85,
+      metalness: 0.01
+    });
+
+    const carpetMaterial = new THREE.MeshStandardMaterial({
+      map: carpetTex,
+      roughness: 0.98,
+      metalness: 0.02
+    });
+
+    const ceilingMaterial = new THREE.MeshStandardMaterial({
+      map: ceilingTex,
+      roughness: 0.90
+    });
+
+    const waterMaterial = new THREE.MeshStandardMaterial({
+      color: 0x2b2b0e,
+      roughness: 0.05,
+      metalness: 0.9,
+      normalMap: waterNorm,
+      transparent: true,
+      opacity: 0.82
+    });
+
+    const lightFixtureMaterial = new THREE.MeshBasicMaterial({
+      color: 0xfff0b3
+    });
+
+    // --- MAP DEFINITION ---
+    const UNIT = 5;
+    const HEIGHT = 3.3;
+    const map = [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,3,0,1,0,3,1,1,3,0,1,0,3,1,1,1,1,3,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
+      [1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,0,0,1,0,3,0,1,0,1],
+      [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1],
+      [1,1,1,0,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,1,0,1],
+      [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+      [1,0,3,1,1,1,1,1,0,3,1,1,0,1,1,1,1,1,0,3,0,1,1,1],
+      [1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+      [1,1,1,1,1,0,0,1,1,1,1,0,0,1,0,1,1,1,1,1,1,1,0,1],
+      [1,2,2,2,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,1],
+      [1,2,2,2,1,0,3,1,0,0,1,1,1,1,0,1,0,3,1,1,1,1,0,1],
+      [1,2,2,2,1,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ];
+
+    const colliders = [];
+    const validMonsterTiles = [];
+
+    const dimAmbient = new THREE.AmbientLight(0x201c0a, 0.3);
+    scene.add(dimAmbient);
+
+    for (let r = 0; r < map.length; r++) {
+      for (let c = 0; c < map[r].length; c++) {
+        const x = c * UNIT;
+        const z = r * UNIT;
+
+        if (map[r][c] === 1) {
+          const wallGeo = new THREE.BoxGeometry(UNIT, HEIGHT, UNIT);
+          const wall = new THREE.Mesh(wallGeo, wallMaterial);
+          wall.position.set(x, HEIGHT / 2, z);
+          scene.add(wall);
+          colliders.push(wall);
+        } else if (map[r][c] === 3) {
+          const pillarGeo = new THREE.BoxGeometry(UNIT * 0.6, HEIGHT, UNIT * 0.6);
+          const pillar = new THREE.Mesh(pillarGeo, wallMaterial);
+          pillar.position.set(x, HEIGHT / 2, z);
+          scene.add(pillar);
+          colliders.push(pillar);
+
+          const floorGeo = new THREE.PlaneGeometry(UNIT, UNIT);
+          const floor = new THREE.Mesh(floorGeo, carpetMaterial);
+          floor.rotation.x = -Math.PI / 2;
+          floor.position.set(x, 0, z);
+          scene.add(floor);
+
+          const ceilGeo = new THREE.PlaneGeometry(UNIT, UNIT);
+          const ceil = new THREE.Mesh(ceilGeo, ceilingMaterial);
+          ceil.rotation.x = Math.PI / 2;
+          ceil.position.set(x, HEIGHT, z);
+          scene.add(ceil);
+        } else {
+          validMonsterTiles.push(new THREE.Vector3(x, 0, z));
+
+          const ceilGeo = new THREE.PlaneGeometry(UNIT, UNIT);
+          const ceil = new THREE.Mesh(ceilGeo, ceilingMaterial);
+          ceil.rotation.x = Math.PI / 2;
+          ceil.position.set(x, HEIGHT, z);
+          scene.add(ceil);
+
+          if (map[r][c] === 0) {
+            const floorGeo = new THREE.PlaneGeometry(UNIT, UNIT);
+            const floor = new THREE.Mesh(floorGeo, carpetMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.set(x, 0, z);
+            scene.add(floor);
+          } else if (map[r][c] === 2) {
+            const waterGeo = new THREE.PlaneGeometry(UNIT, UNIT);
+            const water = new THREE.Mesh(waterGeo, waterMaterial);
+            water.rotation.x = -Math.PI / 2;
+            water.position.set(x, 0.35, z);
+            scene.add(water);
+
+            const floorGeo = new THREE.PlaneGeometry(UNIT, UNIT);
+            const floor = new THREE.Mesh(floorGeo, carpetMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.set(x, 0, z);
+            scene.add(floor);
+          }
+
+          if ((r * 7 + c * 3) % 4 === 0) {
+            const lightMesh = new THREE.Mesh(
+              new THREE.PlaneGeometry(2.4, 1.0),
+              lightFixtureMaterial
+            );
+            lightMesh.rotation.x = Math.PI / 2;
+            lightMesh.position.set(x, HEIGHT - 0.01, z);
+            scene.add(lightMesh);
+
+            const light = new THREE.PointLight(0xffe89e, 1.8, 12, 1.8);
+            light.position.set(x, HEIGHT - 0.25, z);
+            scene.add(light);
+          }
         }
+      }
+    }
 
-        function getBFSPath(startX, startY, targetX, targetY, flee = false) {
-            const queue = [{x: startX, y: startY, path: []}];
-            const visited = Array.from({length: MAP_HEIGHT}, () => Array(MAP_WIDTH).fill(false));
-            visited[startY][startX] = true;
-            const dirs = [{x:0,y:-1}, {x:1,y:0}, {x:0,y:1}, {x:-1,y:0}];
+    function buildStairs(x, z) {
+      const stairGroup = new THREE.Group();
+      const numSteps = 14;
+      const stepWidth = 2.6;
+      const stepHeight = 0.22;
+      const stepDepth = 0.35;
 
-            let bestFleePath = null; let maxDist = -1;
+      for (let i = 0; i < numSteps; i++) {
+        const stepGeo = new THREE.BoxGeometry(stepWidth, stepHeight, stepDepth);
+        const step = new THREE.Mesh(stepGeo, wallMaterial);
+        step.position.set(0, i * stepHeight + stepHeight / 2, i * stepDepth);
+        stairGroup.add(step);
+      }
+      stairGroup.position.set(x, 0, z);
+      scene.add(stairGroup);
+    }
+    buildStairs(2 * UNIT, 12 * UNIT);
 
-            while (queue.length > 0) {
-                let curr = queue.shift();
-                if (!flee && curr.x === targetX && curr.y === targetY) {
-                    return curr.path.length > 0 ? curr.path[0] : null;
-                }
-                if (flee) {
-                    let d = Math.hypot(curr.x - targetX, curr.y - targetY);
-                    if (d > maxDist && curr.path.length > 0) {
-                        maxDist = d; bestFleePath = curr.path[0];
-                    }
-                    if (curr.path.length > 8) continue; 
-                }
+    // --- MONSTER CREATION ---
+    const slimyFleshMat = new THREE.MeshStandardMaterial({ 
+      color: 0x0a0202, 
+      roughness: 0.15, 
+      metalness: 0.1 
+    });
+    
+    const rottingVeinMat = new THREE.MeshStandardMaterial({ 
+      color: 0x1f0303, 
+      roughness: 0.3, 
+      metalness: 0.05 
+    });
 
-                for (let d of dirs) {
-                    let nx = curr.x + d.x; let ny = curr.y + d.y;
-                    if (nx < 0) nx = MAP_WIDTH - 1; if (nx >= MAP_WIDTH) nx = 0;
-                    if (ny >= 0 && ny < MAP_HEIGHT && !visited[ny][nx] && isValidMove(nx, ny, true)) {
-                        visited[ny][nx] = true;
-                        queue.push({x: nx, y: ny, path: [...curr.path, {dx: d.x, dy: d.y}]});
-                    }
-                }
-            }
-            return flee ? bestFleePath : null;
-        }
+    const eyeGlowMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const toothMat = new THREE.MeshStandardMaterial({ color: 0xddccaa, roughness: 0.4 });
+    const voidMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 1.0 });
 
-        // --- ENTITIES ---
-        class SmilingFace {
-            constructor() { this.reset(); }
-            reset() {
-                this.gridX = 1; this.gridY = 1;
-                this.x = this.gridX * tileW + tileW/2;
-                this.y = this.gridY * tileH + tileH/2;
-                this.dirX = 1; this.dirY = 0;
-                this.nextDirX = 1; this.nextDirY = 0;
-                this.animOffset = 0; // For bobbing
-            }
-            update() {
-                if (playerEvilTimer > 0) playerEvilTimer--;
+    const monsterGroup = new THREE.Group();
 
-                let targetX = this.gridX * tileW + tileW/2;
-                let targetY = this.gridY * tileH + tileH/2;
-                let stepX = tileW * pawmanSpeed;
-                let stepY = tileH * pawmanSpeed;
-                let dx = targetX - this.x; let dy = targetY - this.y;
+    function createOrganicFleshMesh(radius, height, strands = 36, erraticness = 1.2) {
+      const group = new THREE.Group();
+      for (let i = 0; i < strands; i++) {
+        const points = [];
+        const numSegments = 10;
+        const angle = (i / strands) * Math.PI * 2;
 
-                if (Math.abs(dx) <= stepX && Math.abs(dy) <= stepY) {
-                    this.x = targetX; this.y = targetY;
+        for (let s = 0; s <= numSegments; s++) {
+          const pct = s / numSegments;
+          const y = (pct - 0.5) * height;
 
-                    if (currentMap[this.gridY][this.gridX] === 0) {
-                        currentMap[this.gridY][this.gridX] = 2; score += 10; pelletsLeft--;
-                    } else if (currentMap[this.gridY][this.gridX] === 3) {
-                        currentMap[this.gridY][this.gridX] = 2; score += 50; pelletsLeft--;
-                        // Power-up: make player evil (purple) and ghosts frightened
-                        playerEvilTimer = 350;
-                        triggerFrightenedMode(); shakeAmount = 10;
-                    }
+          const bulge = Math.sin(pct * Math.PI) * radius * 1.6;
+          const noiseX = (Math.random() - 0.5) * 0.22 * erraticness;
+          const noiseZ = (Math.random() - 0.5) * 0.22 * erraticness;
 
-                    if (isValidMove(this.gridX + this.nextDirX, this.gridY + this.nextDirY)) {
-                        this.dirX = this.nextDirX; this.dirY = this.nextDirY;
-                    }
-                    if (isValidMove(this.gridX + this.dirX, this.gridY + this.dirY)) {
-                        this.gridX += this.dirX; this.gridY += this.dirY;
-                    } else {
-                        this.dirX = 0; this.dirY = 0;
-                    }
+          const x = Math.cos(angle) * (bulge * 0.6) + noiseX;
+          const z = Math.sin(angle) * (bulge * 0.6) + noiseZ;
 
-                    if (this.gridX < 0) { this.gridX = MAP_WIDTH - 1; this.x = this.gridX * tileW + tileW/2; }
-                    else if (this.gridX >= MAP_WIDTH) { this.gridX = 0; this.x = this.gridX * tileW + tileW/2; }
-                } else {
-                    this.x += Math.sign(dx) * stepX; this.y += Math.sign(dy) * stepY;
-                }
-
-                // Bobbing animation logic
-                if(this.dirX !== 0 || this.dirY !== 0) {
-                    this.animOffset += 0.3;
-                }
-            }
-            draw() {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                
-                // Stretch and squish based on speed (Free Will Physics addition)
-                let stretch = 1 + (pawmanSpeed * 0.5); 
-                let squish = 1 - (pawmanSpeed * 0.2);
-                if (this.dirX !== 0) ctx.scale(stretch, squish);
-                if (this.dirY !== 0) ctx.scale(squish, stretch);
-
-                // Bobbing translation
-                ctx.translate(0, Math.sin(this.animOffset) * 2);
-
-                let radius = Math.min(tileW, tileH) / 2.2;
-
-                // Soft Clay Sphere Drop Shadow
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-                ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 5;
-
-                const isEvil = playerEvilTimer > 0;
-
-                // Base Face Circle
-                ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                ctx.fillStyle = isEvil ? "#7D2AE8" : "#F4D03F";
-                ctx.fill();
-
-                // 3D Highlight for Sphere
-                ctx.shadowColor = 'transparent';
-                let grad = ctx.createRadialGradient(-radius*0.3, -radius*0.3, radius*0.1, 0, 0, radius);
-                grad.addColorStop(0, 'rgba(255,255,255,0.6)');
-                grad.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = grad; ctx.fill();
-
-                // Rotate content inside to face direction safely without rotating the highlight incorrectly
-                let eyeOffsetX = this.dirX * (radius*0.3);
-                let eyeOffsetY = this.dirY * (radius*0.3);
-
-                // Eyes (Black/Purple villain face)
-                ctx.fillStyle = isEvil ? "#2A0B3D" : "#1a1a1a";
-                ctx.beginPath(); ctx.arc(-radius*0.3 + eyeOffsetX, -radius*0.2 + eyeOffsetY, radius*0.15, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(radius*0.3 + eyeOffsetX, -radius*0.2 + eyeOffsetY, radius*0.15, 0, Math.PI*2); ctx.fill();
-                
-                // Eye shines (White)
-                ctx.fillStyle = "#fff";
-                ctx.beginPath(); ctx.arc(-radius*0.35 + eyeOffsetX, -radius*0.25 + eyeOffsetY, radius*0.05, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(radius*0.25 + eyeOffsetX, -radius*0.25 + eyeOffsetY, radius*0.05, 0, Math.PI*2); ctx.fill();
-
-                // Smile / Evil mouth
-                ctx.beginPath();
-                if (isEvil) {
-                    // Angry teeth-ish jagged mouth
-                    ctx.moveTo(eyeOffsetX - radius*0.35, eyeOffsetY + radius*0.05);
-                    ctx.lineTo(eyeOffsetX - radius*0.1, eyeOffsetY + radius*0.18);
-                    ctx.lineTo(eyeOffsetX - radius*0.02, eyeOffsetY + radius*0.02);
-                    ctx.lineTo(eyeOffsetX + radius*0.06, eyeOffsetY + radius*0.16);
-                    ctx.lineTo(eyeOffsetX + radius*0.35, eyeOffsetY + radius*0.05);
-                } else {
-                    // Happy Curve
-                    ctx.arc(eyeOffsetX, eyeOffsetY + radius*0.2, radius*0.4, 0, Math.PI, false);
-                }
-                ctx.lineWidth = radius * 0.12; ctx.strokeStyle = isEvil ? "#2A0B3D" : "#1a1a1a"; ctx.lineCap = "round";
-                ctx.stroke();
-
-                ctx.restore();
-            }
-        }
-
-        class Ghost {
-            constructor(baseColor, highlightColor, type) {
-                this.baseColor = baseColor;
-                this.highlightColor = highlightColor;
-                this.type = type; 
-                this.reset();
-            }
-            reset() {
-                this.gridX = 18 + this.type; this.gridY = 10;
-                this.x = this.gridX * tileW + tileW/2; this.y = this.gridY * tileH + tileH/2;
-                this.dirX = 0; this.dirY = -1;
-                this.mode = 'chase'; 
-                this.frightenedTimer = 0;
-            }
-            update() {
-                let targetX = this.gridX * tileW + tileW/2;
-                let targetY = this.gridY * tileH + tileH/2;
-                
-                let curSpeedRatio = baseGhostSpeed;
-                if(this.mode === 'frightened') curSpeedRatio *= 0.6; 
-                if(this.mode === 'eaten') curSpeedRatio = 0.3; 
-                
-                let stepX = tileW * curSpeedRatio;
-                let stepY = tileH * curSpeedRatio;
-                let dx = targetX - this.x; let dy = targetY - this.y;
-
-                if (Math.abs(dx) <= stepX && Math.abs(dy) <= stepY) {
-                    this.x = targetX; this.y = targetY;
-
-                    let nextMove = null;
-
-                    if (this.mode === 'eaten') {
-                        if (this.gridX === 19 && this.gridY === 10) {
-                            this.mode = 'chase'; this.dirX = 0; this.dirY = -1;
-                        } else {
-                            nextMove = getBFSPath(this.gridX, this.gridY, 19, 10, false);
-                        }
-                    } else if (this.mode === 'frightened') {
-                        nextMove = getBFSPath(this.gridX, this.gridY, player.gridX, player.gridY, true);
-                    } else {
-                        let tgtX = player.gridX; let tgtY = player.gridY;
-                        if (this.type === 1) { 
-                            tgtX += player.dirX * 4; tgtY += player.dirY * 4;
-                            if (tgtX < 0) tgtX = 0; if (tgtX >= MAP_WIDTH) tgtX = MAP_WIDTH-1;
-                            if (tgtY < 0) tgtY = 0; if (tgtY >= MAP_HEIGHT) tgtY = MAP_HEIGHT-1;
-                        } else if (this.type === 2) { 
-                            let dist = Math.hypot(this.gridX - player.gridX, this.gridY - player.gridY);
-                            if (dist > 6) { tgtX = Math.floor(Math.random() * MAP_WIDTH); tgtY = Math.floor(Math.random() * MAP_HEIGHT); }
-                        }
-                        nextMove = getBFSPath(this.gridX, this.gridY, tgtX, tgtY, false);
-                    }
-
-                    if (nextMove) {
-                        this.dirX = nextMove.dx; this.dirY = nextMove.dy;
-                    } else {
-                        const possibleMoves = [{x:1, y:0}, {x:-1, y:0}, {x:0, y:1}, {x:0, y:-1}];
-                        for(let m of possibleMoves) {
-                            if (m.x === -this.dirX && m.y === -this.dirY) continue;
-                            if (isValidMove(this.gridX + m.x, this.gridY + m.y, true)) {
-                                this.dirX = m.x; this.dirY = m.y; break;
-                            }
-                        }
-                    }
-
-                    this.gridX += this.dirX; this.gridY += this.dirY;
-
-                    if (this.gridX < 0) { this.gridX = MAP_WIDTH - 1; this.x = this.gridX * tileW + tileW/2; }
-                    else if (this.gridX >= MAP_WIDTH) { this.gridX = 0; this.x = this.gridX * tileW + tileW/2; }
-                } else {
-                    this.x += Math.sign(dx) * stepX; this.y += Math.sign(dy) * stepY;
-                }
-
-                if (this.mode === 'frightened') {
-                    this.frightenedTimer--;
-                    if (this.frightenedTimer <= 0) this.mode = 'chase';
-                }
-            }
-            draw() {
-                let radius = Math.min(tileW, tileH) / 2.2;
-                
-                // Hover bobbing effect
-                let hoverY = Math.sin(globalTimer * 0.1 + this.type) * 3;
-
-                ctx.save();
-                ctx.translate(this.x, this.y + hoverY);
-
-                if (this.mode === 'eaten') {
-                    // Floating Eyes returning
-                    ctx.fillStyle = "#fff";
-                    ctx.beginPath(); ctx.arc(-radius/3, 0, radius/3, 0, Math.PI*2);
-                    ctx.arc(radius/3, 0, radius/3, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = "#1a1a1a";
-                    ctx.beginPath(); ctx.arc(-radius/3 + this.dirX*2, this.dirY*2, radius/6, 0, Math.PI*2);
-                    ctx.arc(radius/3 + this.dirX*2, this.dirY*2, radius/6, 0, Math.PI*2); ctx.fill();
-                    ctx.restore(); return;
-                }
-
-                // Clay Drop Shadow
-                ctx.shadowColor = 'rgba(0,0,0,0.2)';
-                ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 5;
-
-                // Color Selection
-                let color = this.baseColor;
-                if (this.mode === 'frightened') {
-                    color = (this.frightenedTimer < 120 && Math.floor(globalTimer / 8) % 2 === 0) ? "#ffffff" : "#4A90E2";
-                }
-
-                // Draw Smooth Clay Ghost Body
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.arc(0, -radius*0.2, radius, Math.PI, 0, false);
-                ctx.lineTo(radius, radius);
-                
-                // Smooth Wavy Bottom
-                let waveCount = 3;
-                let waveWidth = (radius * 2) / waveCount;
-                let waveOffset = (globalTimer % 20) / 20 * waveWidth;
-                for(let i=0; i<waveCount; i++){
-                    ctx.quadraticCurveTo(radius - waveWidth*(i+0.5), radius + 5, radius - waveWidth*(i+1), radius);
-                }
-                ctx.lineTo(-radius, radius);
-                ctx.closePath();
-                ctx.fill();
-
-                // 3D Highlight
-                ctx.shadowColor = 'transparent';
-                ctx.save(); ctx.clip();
-                let grad = ctx.createLinearGradient(-radius, -radius, radius, radius);
-                grad.addColorStop(0, 'rgba(255,255,255,0.4)');
-                grad.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = grad; ctx.fill();
-                ctx.restore();
-
-                // Eyes (Looking direction)
-                let eyeX = this.dirX * 3; let eyeY = this.dirY * 3 - radius*0.2;
-                ctx.fillStyle = "#fff";
-                ctx.beginPath(); ctx.arc(-radius*0.35 + eyeX, eyeY, radius*0.3, 0, Math.PI * 2);
-                ctx.arc(radius*0.35 + eyeX, eyeY, radius*0.3, 0, Math.PI * 2); ctx.fill();
-                
-                ctx.fillStyle = "#1a1a1a";
-                ctx.beginPath(); ctx.arc(-radius*0.35 + eyeX*1.5, eyeY + this.dirY, radius*0.12, 0, Math.PI * 2);
-                ctx.arc(radius*0.35 + eyeX*1.5, eyeY + this.dirY, radius*0.12, 0, Math.PI * 2); ctx.fill();
-
-                // Frightened face details
-                if (this.mode === 'frightened') {
-                    ctx.strokeStyle = "#1a1a1a"; ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(-radius*0.4, radius*0.4); ctx.lineTo(-radius*0.2, radius*0.2);
-                    ctx.lineTo(0, radius*0.4); ctx.lineTo(radius*0.2, radius*0.2);
-                    ctx.lineTo(radius*0.4, radius*0.4); ctx.stroke();
-                }
-
-                ctx.restore();
-            }
+          points.push(new THREE.Vector3(x, y, z));
         }
 
-        const player = new SmilingFace();
-        const allGhosts = [
-            new Ghost("#E56B6F", "#F89E9F", 0), // Pastel Ruby (Chaser)
-            new Ghost("#F3A6C7", "#F8D1E2", 1), // Pastel Pink (Ambusher)
-            new Ghost("#45C4B0", "#8BE1D6", 2)  // Soft Mint (Flanker)
-        ];
-        let ghosts = [];
+        const curve = new THREE.CatmullRomCurve3(points);
+        const tubeGeo = new THREE.TubeGeometry(curve, 20, 0.01 + Math.random() * 0.022, 6, false);
+        const mesh = new THREE.Mesh(tubeGeo, Math.random() > 0.4 ? slimyFleshMat : rottingVeinMat);
+        group.add(mesh);
+      }
+      return group;
+    }
 
-        function triggerFrightenedMode() {
-            ghosts.forEach(g => { if(g.mode !== 'eaten') { g.mode = 'frightened'; g.frightenedTimer = 350; } });
-        }
+    const torsoMesh = createOrganicFleshMesh(0.32, 2.0, 48, 1.6);
+    torsoMesh.position.set(0, 2.1, 0);
+    monsterGroup.add(torsoMesh);
 
-        function drawCollectibles() {
-            for (let r = 0; r < MAP_HEIGHT; r++) {
-                for (let c = 0; c < MAP_WIDTH; c++) {
-                    let tile = currentMap[r][c];
-                    let x = c * tileW + tileW/2;
-                    let y = r * tileH + tileH/2;
-                    
-                    if (tile === 0) {
-                        // Soft clay dot
-                        ctx.fillStyle = "#C4CCD3";
-                        ctx.beginPath(); ctx.arc(x, y, Math.min(tileW, tileH)*0.15, 0, Math.PI * 2); ctx.fill();
-                    } else if (tile === 3) {
-                        // Big premium glass orb
-                        let pulse = Math.sin(globalTimer * 0.1) * 2;
-                        let rSize = Math.min(tileW, tileH)*0.35 + pulse;
-                        
-                        let radGrad = ctx.createRadialGradient(x-rSize*0.3, y-rSize*0.3, rSize*0.1, x, y, rSize);
-                        radGrad.addColorStop(0, '#ffffff'); radGrad.addColorStop(0.5, '#A0C4FF'); radGrad.addColorStop(1, 'rgba(255,255,255,0)');
-                        
-                        ctx.fillStyle = radGrad;
-                        ctx.beginPath(); ctx.arc(x, y, rSize, 0, Math.PI * 2); ctx.fill();
-                    }
-                }
-            }
-        }
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 3.2, 0.1);
 
-        function checkCollisions() {
-            ghosts.forEach(ghost => {
-                let d = Math.hypot(player.x - ghost.x, player.y - ghost.y);
-                if (d < Math.min(tileW, tileH) * 0.8) {
-                    if (ghost.mode === 'frightened') {
-                        score += 500; ghost.mode = 'eaten'; shakeAmount = 8;
-                    } else if (ghost.mode === 'chase') {
-                        lives--; shakeAmount = 15;
-                        baseGhostSpeed += ghostSpeedIncrement; 
-                        
-                        if (lives <= 0) {
-                            gameOver = true;
-                            overlayTitle.innerText = "CAPTURED!";
-                            document.getElementById("overlay-subtitle").innerText = `SCORE: ${score}. YOU COULDN'T OUTRUN THEM.`;
-                            overlay.style.display = "flex";
-                        } else {
-                            resetPositions();
-                        }
-                    }
-                }
-            });
-        }
+    const skullCore = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), voidMat);
+    headGroup.add(skullCore);
 
-        function checkLevelProgression() {
-            if (pelletsLeft <= 0) {
-                level++; score += 1000; shakeAmount = 10;
-                baseGhostSpeed += ghostSpeedIncrement;
-                pawmanSpeed = Math.min(pawmanSpeed + 0.003, 0.18); 
-                currentMap = JSON.parse(JSON.stringify(complexLayout));
-                initPellets(); resetPositions(); renderMapToOffscreen();
-            }
-        }
+    const upperJaw = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), slimyFleshMat);
+    upperJaw.rotation.x = -Math.PI / 6;
+    upperJaw.position.set(0, 0.05, 0.1);
+    headGroup.add(upperJaw);
 
-        function initPellets() {
-            pelletsLeft = 0;
-            for(let r=0; r<MAP_HEIGHT; r++) {
-                for(let c=0; c<MAP_WIDTH; c++) {
-                    if(currentMap[r][c] === 0 || currentMap[r][c] === 3) pelletsLeft++;
-                }
-            }
-        }
+    const lowerJaw = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), slimyFleshMat);
+    lowerJaw.rotation.x = Math.PI / 2 + 0.3;
+    lowerJaw.position.set(0, -0.1, 0.1);
+    headGroup.add(lowerJaw);
 
-        function resetPositions() {
-            player.reset(); ghosts.forEach(g => g.reset());
-        }
+    for (let t = 0; t < 16; t++) {
+      const tooth = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.1, 4), toothMat);
+      const angle = (t / 16) * Math.PI * 2;
+      tooth.position.set(Math.cos(angle) * 0.14, -0.02, Math.sin(angle) * 0.14 + 0.1);
+      tooth.rotation.x = Math.PI;
+      headGroup.add(tooth);
+    }
 
-        function startGame(mode) {
-            // IMPORTANT: set the map BEFORE resizing/rendering,
-            // because resizeGame() calls renderMapToOffscreen() which reads currentMap.
-            currentMap = JSON.parse(JSON.stringify(complexLayout));
+    const mainEye = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), eyeGlowMat);
+    mainEye.position.set(0, 0.12, 0.22);
+    headGroup.add(mainEye);
 
-            resizeGame();
+    for (let e = 0; e < 8; e++) {
+      const smallEye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), eyeGlowMat);
+      const ex = (Math.random() - 0.5) * 0.3;
+      const ey = (Math.random() - 0.5) * 0.3;
+      smallEye.position.set(ex, ey, 0.2 + Math.random() * 0.05);
+      headGroup.add(smallEye);
+    }
 
-            if (mode === 'easy') activeGhostsCount = 1;
-            else if (mode === 'mid') activeGhostsCount = 2;
-            else activeGhostsCount = 3;
+    monsterGroup.add(headGroup);
 
-            ghosts = allGhosts.slice(0, activeGhostsCount);
-            
-            score = 0; level = 1; lives = 3;
-            baseGhostSpeed = 0.14;
-            pawmanSpeed = 0.14;
+    function createOrganicLeg(isLeft) {
+      const side = isLeft ? -1 : 1;
+      const legRoot = new THREE.Group();
+      legRoot.position.set(side * 0.18, 1.3, 0);
 
-            playerEvilTimer = 0;
-            initPellets();
-            resetPositions();
-            
-            gameOver = false;
-            overlay.style.display = "none";
+      const upperMesh = createOrganicFleshMesh(0.14, 1.3, 20, 1.1);
+      upperMesh.position.set(0, -0.6, 0);
+      legRoot.add(upperMesh);
 
-            // Boot frame
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            requestAnimationFrame(gameLoop);
-        }
+      const kneeNode = new THREE.Group();
+      kneeNode.position.set(0, -1.2, 0.08);
 
-        window.addEventListener("keydown", e => {
-            if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
-            switch(e.key) {
-                case "ArrowUp": case "w": case "W":    player.nextDirX = 0;  player.nextDirY = -1; break;
-                case "ArrowDown": case "s": case "S":  player.nextDirX = 0;  player.nextDirY = 1;  break;
-                case "ArrowLeft": case "a": case "A":  player.nextDirX = -1; player.nextDirY = 0;  break;
-                case "ArrowRight": case "d": case "D": player.nextDirX = 1;  player.nextDirY = 0;  break;
-            }
+      const lowerMesh = createOrganicFleshMesh(0.1, 1.4, 18, 0.9);
+      lowerMesh.position.set(0, -0.65, -0.05);
+      kneeNode.add(lowerMesh);
+
+      const footNode = new THREE.Group();
+      footNode.position.set(0, -1.3, 0);
+      for (let c = 0; c < 4; c++) {
+        const claw = new THREE.Mesh(new THREE.ConeGeometry(0.015, 0.4, 4), slimyFleshMat);
+        claw.rotation.x = Math.PI / 2 + (Math.random() - 0.5) * 0.3;
+        claw.rotation.y = (c - 1.5) * 0.35;
+        claw.position.set(0, 0, 0.15);
+        footNode.add(claw);
+      }
+      kneeNode.add(footNode);
+
+      legRoot.add(kneeNode);
+      return { root: legRoot, knee: kneeNode, foot: footNode };
+    }
+
+    function createOrganicArm(isLeft) {
+      const side = isLeft ? -1 : 1;
+      const armRoot = new THREE.Group();
+      armRoot.position.set(side * 0.28, 2.6, 0);
+
+      const upperMesh = createOrganicFleshMesh(0.12, 1.3, 18, 1.3);
+      upperMesh.position.set(side * 0.2, -0.5, 0);
+      armRoot.add(upperMesh);
+
+      const elbowNode = new THREE.Group();
+      elbowNode.position.set(side * 0.4, -1.0, 0);
+
+      const lowerMesh = createOrganicFleshMesh(0.08, 1.5, 16, 1.6);
+      lowerMesh.position.set(0, -0.65, 0.2);
+      elbowNode.add(lowerMesh);
+
+      const handNode = new THREE.Group();
+      handNode.position.set(0, -1.35, 0.3);
+      for (let f = 0; f < 5; f++) {
+        const finger = createOrganicFleshMesh(0.02, 0.65, 5, 2.0);
+        finger.rotation.z = (f - 2) * 0.35;
+        finger.position.set((f - 2) * 0.05, -0.2, 0);
+        handNode.add(finger);
+      }
+      elbowNode.add(handNode);
+
+      armRoot.add(elbowNode);
+      return { root: armRoot, elbow: elbowNode, hand: handNode };
+    }
+
+    const leftLeg = createOrganicLeg(true);
+    const rightLeg = createOrganicLeg(false);
+    const leftArm = createOrganicArm(true);
+    const rightArm = createOrganicArm(false);
+
+    monsterGroup.add(leftLeg.root);
+    monsterGroup.add(rightLeg.root);
+    monsterGroup.add(leftArm.root);
+    monsterGroup.add(rightArm.root);
+
+    const extraTendrils = [];
+    for (let t = 0; t < 12; t++) {
+      const tendril = createOrganicFleshMesh(0.02, 1.1 + Math.random() * 0.7, 4, 2.2);
+      tendril.position.set((Math.random() - 0.5) * 0.5, 1.6 + Math.random() * 1.0, (Math.random() - 0.5) * 0.5);
+      monsterGroup.add(tendril);
+      extraTendrils.push(tendril);
+    }
+
+    scene.add(monsterGroup);
+
+    const monsterLight = new THREE.PointLight(0xff0000, 0, 10);
+    monsterLight.position.set(0, 3.2, 0.3);
+    monsterGroup.add(monsterLight);
+
+    // --- MONSTER STATE & AI ---
+    let monsterState = 'DORMANT';
+    let hasBeenDiscovered = false;
+
+    let matchTimer = 0;
+    let stateTimer = 0;
+    let stareDuration = 4.0;
+
+    const SLOW_CREEP_SPEED = 1.35;
+    const WANDER_SPEED = 0.8;
+    const CHASE_DURATION = 15.0;
+
+    let chaseIntensity = 0.0;
+    let wanderTarget = null;
+
+    function getNearbyLocation() {
+      const candidates = validMonsterTiles.filter(pt => {
+        const d = pt.distanceTo(camera.position);
+        return d >= 12.0 && d <= 25.0;
+      });
+      if (candidates.length > 0) {
+        return candidates[Math.floor(Math.random() * candidates.length)].clone();
+      }
+      return new THREE.Vector3(3 * UNIT, 0, 3 * UNIT);
+    }
+
+    function getRandomMapLocation(farAway = false) {
+      if (validMonsterTiles.length === 0) return new THREE.Vector3(10, 0, 10);
+
+      if (farAway) {
+        const candidates = validMonsterTiles.filter(pt => {
+          const d = pt.distanceTo(camera.position);
+          return d >= 18.0;
         });
+        if (candidates.length > 0) {
+          return candidates[Math.floor(Math.random() * candidates.length)].clone();
+        }
+      }
 
-        function gameLoop() {
-            if (gameOver) return;
-            globalTimer++;
+      const randIndex = Math.floor(Math.random() * validMonsterTiles.length);
+      return validMonsterTiles[randIndex].clone();
+    }
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function relocateMonster(stalkingMode = true) {
+      const newPos = getRandomMapLocation(!hasBeenDiscovered || stalkingMode);
+      monsterGroup.position.copy(newPos);
+      monsterGroup.position.x += (Math.random() - 0.5) * 1.2;
+      monsterGroup.position.z += (Math.random() - 0.5) * 1.2;
+      monsterGroup.lookAt(camera.position.x, monsterGroup.position.y, camera.position.z);
+    }
 
-            // Screen Shake Effect
-            ctx.save();
-            if (shakeAmount > 0) {
-                let sx = (Math.random() - 0.5) * shakeAmount;
-                let sy = (Math.random() - 0.5) * shakeAmount;
-                ctx.translate(sx, sy);
-                shakeAmount *= 0.9;
-                if(shakeAmount < 0.5) shakeAmount = 0;
+    const initialPos = getNearbyLocation();
+    monsterGroup.position.copy(initialPos);
+    wanderTarget = getRandomMapLocation(false);
+
+    function animateMonsterLimbs(time, walkSpeed = 1.0, isViolent = false) {
+      const freq = time * 0.006 * walkSpeed;
+      const cycle = Math.sin(freq);
+      const cosCycle = Math.cos(freq);
+
+      leftLeg.root.rotation.x = cycle * 0.5;
+      leftLeg.knee.rotation.x = Math.max(0, -cosCycle) * 0.6;
+
+      rightLeg.root.rotation.x = -cycle * 0.5;
+      rightLeg.knee.rotation.x = Math.max(0, cosCycle) * 0.6;
+
+      leftArm.root.rotation.x = -cycle * 0.45;
+      leftArm.root.rotation.z = -0.2 + Math.sin(time * 0.003) * 0.15;
+      leftArm.elbow.rotation.x = -0.4 + Math.sin(time * 0.008) * 0.3;
+
+      rightArm.root.rotation.x = cycle * 0.35;
+      rightArm.root.rotation.z = 0.2 + Math.cos(time * 0.004) * 0.2;
+      rightArm.elbow.rotation.z = Math.sin(time * 0.01) * 0.4;
+
+      torsoMesh.rotation.z = Math.sin(time * 0.005) * 0.12;
+      torsoMesh.rotation.y = Math.cos(time * 0.003) * 0.15;
+
+      extraTendrils.forEach((td, idx) => {
+        td.rotation.z = Math.sin(time * 0.004 + idx) * 0.35;
+        td.rotation.x = Math.cos(time * 0.005 + idx) * 0.35;
+      });
+
+      if (isViolent || Math.random() < 0.25) {
+        const jitterIntensity = isViolent ? 0.45 : 0.15;
+        headGroup.rotation.x = (Math.random() - 0.5) * jitterIntensity * 3.0;
+        headGroup.rotation.y = (Math.random() - 0.5) * jitterIntensity * 3.0;
+        headGroup.rotation.z = (Math.random() - 0.5) * jitterIntensity;
+
+        torsoMesh.position.x = (Math.random() - 0.5) * jitterIntensity * 0.4;
+        torsoMesh.position.z = (Math.random() - 0.5) * jitterIntensity * 0.4;
+      } else {
+        headGroup.rotation.set(0, 0, 0);
+        torsoMesh.position.set(0, 2.1, 0);
+      }
+    }
+
+    function updateMonster(delta, time) {
+      const distToPlayer = camera.position.distanceTo(monsterGroup.position);
+
+      switch (monsterState) {
+        case 'DORMANT':
+          stopMonsterChaseAudio();
+          monsterGroup.visible = true;
+          monsterLight.intensity = 0.2;
+          chaseIntensity = 0.0;
+
+          matchTimer += delta;
+
+          if (matchTimer > 60.0) {
+            if (!wanderTarget || monsterGroup.position.distanceTo(wanderTarget) < 1.5) {
+              wanderTarget = getNearbyLocation();
             }
+            const wanderDir = new THREE.Vector3().subVectors(wanderTarget, monsterGroup.position);
+            wanderDir.y = 0;
+            wanderDir.normalize();
 
-            ctx.drawImage(mapCanvas, 0, 0);
+            monsterGroup.position.addScaledVector(wanderDir, WANDER_SPEED * delta);
+            monsterGroup.lookAt(wanderTarget.x, monsterGroup.position.y, wanderTarget.z);
 
-            player.update(); ghosts.forEach(g => g.update());
-            checkCollisions(); checkLevelProgression();
+            animateMonsterLimbs(time, 0.7, false);
+          } else {
+            monsterGroup.position.y = 0.0;
+            animateMonsterLimbs(time, 0.1, false);
+          }
 
-            drawCollectibles();
-            player.draw();
-            ghosts.forEach(g => g.draw());
+          if (distToPlayer < 4.2) {
+            hasBeenDiscovered = true;
+            monsterState = 'SLOW_CHASE';
+            stateTimer = 0;
+          }
+          break;
 
-            ctx.restore();
+        case 'STALKING':
+          stopMonsterChaseAudio();
+          monsterGroup.visible = true;
+          monsterLight.intensity = 0.4 + Math.random() * 0.4;
+          chaseIntensity = Math.max(0, chaseIntensity - delta * 1.5);
+          monsterGroup.lookAt(camera.position.x, monsterGroup.position.y, camera.position.z);
 
-            // Update Glass UI
-            scoreEl.innerText = score;
-            levelEl.innerText = level;
+          animateMonsterLimbs(time, 0.2, Math.random() < 0.15);
 
-            requestAnimationFrame(gameLoop);
+          stateTimer += delta;
+
+          if (distToPlayer < 10.0) {
+            monsterState = 'SLOW_CHASE';
+            stateTimer = 0;
+          }
+
+          if (stateTimer >= stareDuration) {
+            monsterState = 'VANISHED';
+            monsterGroup.visible = false;
+            stateTimer = 0;
+          }
+          break;
+
+        case 'SLOW_CHASE':
+          playMonsterChaseAudio();
+          monsterGroup.visible = true;
+          monsterLight.intensity = 3.5 + Math.sin(time * 0.02) * 2.0;
+
+          stateTimer += delta;
+          chaseIntensity = Math.min(1.0, 10.0 / Math.max(distToPlayer, 1.0));
+
+          const targetPos = camera.position.clone();
+          const moveDir = new THREE.Vector3().subVectors(targetPos, monsterGroup.position);
+          moveDir.y = 0;
+          moveDir.normalize();
+
+          monsterGroup.position.addScaledVector(moveDir, SLOW_CREEP_SPEED * delta);
+          monsterGroup.lookAt(camera.position.x, monsterGroup.position.y, camera.position.z);
+
+          animateMonsterLimbs(time, 1.8, true);
+
+          if (distToPlayer < 1.8) {
+            monsterState = 'JUMPSCARE';
+            stateTimer = 0;
+          }
+
+          if (stateTimer >= CHASE_DURATION) {
+            monsterState = 'VANISHED';
+            monsterGroup.visible = false;
+            stateTimer = 0;
+          }
+          break;
+
+        case 'JUMPSCARE':
+          playMonsterChaseAudio();
+          chaseIntensity = 1.0;
+          monsterGroup.position.lerp(camera.position, delta * 18.0);
+          headGroup.scale.set(3.8, 3.8, 3.8);
+          animateMonsterLimbs(time, 5.0, true);
+
+          stateTimer += delta;
+          if (stateTimer > 0.6) {
+            headGroup.scale.set(1.0, 1.0, 1.0);
+            monsterState = 'VANISHED';
+            monsterGroup.visible = false;
+            stateTimer = 0;
+          }
+          break;
+
+        case 'VANISHED':
+          stopMonsterChaseAudio();
+          monsterGroup.visible = false;
+          monsterLight.intensity = 0;
+          chaseIntensity = Math.max(0, chaseIntensity - delta * 1.5);
+          stateTimer += delta;
+
+          if (stateTimer > 2.5) {
+            relocateMonster(true);
+            stareDuration = 3.0 + Math.random() * 3.0;
+            monsterState = 'STALKING';
+            monsterGroup.visible = true;
+            stateTimer = 0;
+          }
+          break;
+      }
+    }
+
+    // --- POST-PROCESSING SHADER ---
+    const composer = new THREE.EffectComposer(renderer);
+    composer.addPass(new THREE.RenderPass(scene, camera));
+
+    const VHSShader = {
+      uniforms: {
+        "tDiffuse": { value: null },
+        "time": { value: 0.0 },
+        "chaseIntensity": { value: 0.0 },
+        "resolution": { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float time;
+        uniform float chaseIntensity;
+        uniform vec2 resolution;
+        varying vec2 vUv;
+
+        float rand(vec2 co) {
+          return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
         }
 
-        resizeGame();
-    </script>
+        vec4 applyBlur(vec2 uv, vec2 distOffset, float extraBlur) {
+          vec4 col = vec4(0.0);
+          vec2 texel = vec2(1.0 / resolution.x, 1.0 / resolution.y);
+          float blurScale = (length(distOffset) * 2.8) + (extraBlur * 3.5);
+
+          col += texture2D(tDiffuse, uv + vec2(-1.0, -1.0) * texel * blurScale) * 0.0625;
+          col += texture2D(tDiffuse, uv + vec2( 0.0, -1.0) * texel * blurScale) * 0.125;
+          col += texture2D(tDiffuse, uv + vec2( 1.0, -1.0) * texel * blurScale) * 0.0625;
+          col += texture2D(tDiffuse, uv + vec2(-1.0,  0.0) * texel * blurScale) * 0.125;
+          col += texture2D(tDiffuse, uv) * 0.25;
+          col += texture2D(tDiffuse, uv + vec2( 1.0,  0.0) * texel * blurScale) * 0.125;
+          col += texture2D(tDiffuse, uv + vec2(-1.0,  1.0) * texel * blurScale) * 0.0625;
+          col += texture2D(tDiffuse, uv + vec2( 0.0,  1.0) * texel * blurScale) * 0.125;
+          col += texture2D(tDiffuse, uv + vec2( 1.0,  1.0) * texel * blurScale) * 0.0625;
+
+          return col;
+        }
+
+        void main() {
+          vec2 uv = vUv;
+
+          if (chaseIntensity > 0.1) {
+            float jitter = (rand(vec2(time * 15.0, uv.y)) - 0.5) * 0.02 * chaseIntensity;
+            uv.x += jitter;
+          }
+
+          vec2 distOffset = uv - vec2(0.5);
+          float dist = length(distOffset);
+          uv += distOffset * dist * (0.035 + chaseIntensity * 0.08);
+
+          vec4 blurredTex = applyBlur(uv, distOffset, chaseIntensity);
+
+          vec2 caOffset = distOffset * dist * (0.028 + chaseIntensity * 0.12);
+          float r = texture2D(tDiffuse, uv + caOffset).r;
+          float g = blurredTex.g;
+          float b = texture2D(tDiffuse, uv - caOffset).b;
+
+          vec3 color = vec3(r, g, b);
+
+          color.r *= (0.98 + chaseIntensity * 0.5);
+          color.g *= (0.92 - chaseIntensity * 0.25);
+          color.b *= (0.65 - chaseIntensity * 0.35);
+
+          float grainScale = 0.14 + chaseIntensity * 0.2;
+          float grain = (rand(uv + vec2(time * 0.07, time * 0.03)) - 0.5) * grainScale;
+          color += grain;
+
+          float vignette = smoothstep(0.85 - chaseIntensity * 0.2, 0.2, dist);
+          color *= vignette;
+
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `
+    };
+
+    const vhsPass = new THREE.ShaderPass(VHSShader);
+    composer.addPass(vhsPass);
+
+    // --- PLAYER MOVEMENT & PHYSICS ---
+    const moveState = { forward: false, backward: false, left: false, right: false, run: false };
+    const velocity = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+
+    window.addEventListener('keydown', (e) => {
+      switch (e.code) {
+        case 'KeyW': moveState.forward = true; break;
+        case 'KeyS': moveState.backward = true; break;
+        case 'KeyA': moveState.left = true; break;
+        case 'KeyD': moveState.right = true; break;
+        case 'ShiftLeft': moveState.run = true; break;
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      switch (e.code) {
+        case 'KeyW': moveState.forward = false; break;
+        case 'KeyS': moveState.backward = false; break;
+        case 'KeyA': moveState.left = false; break;
+        case 'KeyD': moveState.right = false; break;
+        case 'ShiftLeft': moveState.run = false; break;
+      }
+    });
+
+    camera.position.set(1 * UNIT, 1.65, 1 * UNIT);
+
+    function checkWallCollision(newPos) {
+      const radius = 0.55;
+      for (let i = 0; i < colliders.length; i++) {
+        const box = new THREE.Box3().setFromObject(colliders[i]);
+        const expandedBox = box.clone().expandByScalar(radius);
+        if (expandedBox.containsPoint(newPos)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // --- ANIMATION LOOP ---
+    let prevTime = performance.now();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const time = performance.now();
+      const delta = (time - prevTime) / 1000;
+      prevTime = time;
+
+      waterNorm.offset.x += delta * 0.05;
+      waterNorm.offset.y += delta * 0.03;
+
+      vhsPass.uniforms.time.value = time * 0.005;
+      vhsPass.uniforms.chaseIntensity.value = chaseIntensity;
+
+      updateMonster(delta, time);
+
+      if (controls.isLocked) {
+        velocity.x -= velocity.x * 8.0 * delta;
+        velocity.z -= velocity.z * 8.0 * delta;
+
+        direction.z = Number(moveState.forward) - Number(moveState.backward);
+        direction.x = Number(moveState.right) - Number(moveState.left);
+        direction.normalize();
+
+        const speed = moveState.run ? 55.0 : 35.0;
+
+        if (moveState.forward || moveState.backward) velocity.z -= direction.z * speed * delta;
+        if (moveState.left || moveState.right) velocity.x -= direction.x * speed * delta;
+
+        const oldPos = camera.position.clone();
+
+        controls.moveRight(-velocity.x * delta);
+        if (checkWallCollision(camera.position)) camera.position.x = oldPos.x;
+
+        controls.moveForward(-velocity.z * delta);
+        if (checkWallCollision(camera.position)) camera.position.z = oldPos.z;
+
+        if (moveState.forward || moveState.backward || moveState.left || moveState.right) {
+          const bobFreq = moveState.run ? 0.022 : 0.014;
+          camera.position.y = 1.65 + Math.sin(time * bobFreq) * 0.06;
+        } else {
+          camera.position.y = 1.65;
+        }
+      }
+
+      composer.render();
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+      vhsPass.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
+    });
+  </script>
 </body>
 </html>
