@@ -338,41 +338,85 @@ body.bb-game-lib-native #gameLibBgVideo.cinematic-video-bg{
     
     .card-info { 
       position: absolute; 
-      bottom: 30px; 
-      left: 30px; 
-      right: 30px; 
-      z-index: 2; 
+      bottom: 20px; 
+      left: 16px; 
+      right: 16px; 
+      padding: 14px 16px;
+      z-index: 6; 
       transform: translateZ(60px); 
       opacity: 0; 
-      transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1); 
-      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+      transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1); 
+      background: rgba(8, 9, 14, 0.78);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 16px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
     
     .game-card.active .card-info { 
       opacity: 1; 
       transform: translateZ(60px) translateY(0); 
+      border-color: var(--card-accent, rgba(255, 255, 255, 0.25));
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.85), 
+                  0 0 25px var(--card-glow, rgba(0, 240, 255, 0.22)),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    
+    .card-header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      align-self: flex-start;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #00f0ff;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 3px 9px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    
+    .card-header-badge .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+      animation: badgePulse 1.8s infinite;
+    }
+    
+    @keyframes badgePulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.35); opacity: 0.5; }
     }
     
     .card-title { 
       font-family: var(--font-hud); 
-      font-size: 1.6rem; 
+      font-size: 1.45rem; 
       font-weight: 900; 
-      line-height: 1.1; 
-      margin-bottom: 8px; 
+      line-height: 1.12; 
+      margin-top: 2px;
+      margin-bottom: 2px;
       text-transform: uppercase; 
       letter-spacing: 1.5px;
-      background: linear-gradient(135deg, #fff 0%, var(--clr-accent) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
+      word-break: break-word;
     }
     
     .card-genre { 
       font-family: var(--font-mono); 
-      font-size: 0.8rem; 
-      color: var(--clr-accent); 
-      letter-spacing: 2.5px;
-      text-shadow: 0 0 10px var(--clr-accent-dim);
+      font-size: 0.7rem; 
+      color: rgba(255, 255, 255, 0.72); 
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
     }
 
     .home-actions { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; z-index: 100; opacity: 0; animation: cinematicFadeIn 1s 0.5s forwards; }
@@ -1376,8 +1420,8 @@ body.bb-profile-native .bg-layer::after {
       <div class="leaderboard-tabs" style="margin-top: 20px; margin-bottom: 30px;">
         <div class="leaderboard-tab active" onclick="switchLeaderboardGame('all', this)">ALL GAMES</div>
         <div class="leaderboard-tab" onclick="switchLeaderboardGame('subway', this)">SUBWAY SURFERS</div>
-        <div class="leaderboard-tab" onclick="switchLeaderboardGame('mario', this)">SUPER MARIO</div>
-        <div class="leaderboard-tab" onclick="switchLeaderboardGame('game1', this)">GAME1</div>
+        <div class="leaderboard-tab" onclick="switchLeaderboardGame('mario', this)">DARE TRAFFIC</div>
+        <div class="leaderboard-tab" onclick="switchLeaderboardGame('game1', this)">DINO GO</div>
       </div>
 
       <div class="leaderboard-list" id="leaderboardList">
@@ -1630,12 +1674,12 @@ body.bb-profile-native .bg-layer::after {
     ];
 
     const GAMES = [
-      { title: "STREETS OF FIGHT", genre: "2D BEAT 'EM UP // AAA", img: "https://i.pinimg.com/originals/30/ce/97/30ce978aa54e41e0d58a496cb998b27f.gif", file: "STREET FIGTH/Streets of Fight files/s.html", color: "#ff0055" },
-      { title: "FIGHT GAME", genre: "ENDLESS RUNNER", img: "https://i.pinimg.com/736x/db/cf/fe/dbcffeb8b15fe63127fc6e0143d7bd92.jpg", file: "figth game/figth.html", color: "#00f0ff" },
-      { title: "HILL CLIMB", genre: "RACING // PHYSICS", img: "https://i.pinimg.com/1200x/4b/18/bf/4b18bf4bf2b80a977c4d1dfabfbeca36.jpg", file: "hillclibingracing.html", color: "#ff6b35" },
-      { title: "PAC-MAN", genre: "ARCADE // CLASSIC", img: "https://i.pinimg.com/originals/f6/7a/12/f67a122b8f6af771bcabd8db7c641c5e.gif", file: "pawman.html", color: "#ffff00" },
-      { title: "GAME1", genre: "PLATFORMER // GODOT", img: "https://i.pinimg.com/originals/a8/9d/a8/a89da85473d826e0202833e797d51bbd.gif", file: "game1/index.html", color: "#ff6600" },
-      { title: "SUPER MARIO", genre: "PLATFORMER", img: "https://i.pinimg.com/736x/90/20/2d/90202dcbc0c3641646697ea6b0a40ca6.jpg", file: "marioo.html", color: "#ff0000" }
+      { title: "TEMPLE FIGHTER", genre: "2D BEAT 'EM UP // AAA", img: "https://i.pinimg.com/originals/30/ce/97/30ce978aa54e41e0d58a496cb998b27f.gif", file: "zombie.html", color: "#ff0055" },
+      { title: "PIXA JUMPER", genre: "ENDLESS RUNNER // ACTION", img: "https://i.pinimg.com/originals/9b/36/7b/9b367b34c79271552d740e164d98c3ec.gif", file: "figth game/figth.html", color: "#00f0ff" },
+      { title: "DUSTY RIDER", genre: "RACING // PHYSICS", img: "https://i.pinimg.com/736x/bd/c0/47/bdc04742469df185f3bf78a198b9cfb0.jpg", file: "hillclibingracing.html", color: "#ff6b35" },
+      { title: "GOOD DREAM", genre: "SURVIVAL // BACKROOMS", img: "https://i.pinimg.com/736x/00/83/77/008377a98840af077899d388b3e03cc2.jpg", file: "pawman.html", color: "#ffd700" },
+      { title: "DINO GO", genre: "PLATFORMER // GODOT", img: "https://i.pinimg.com/736x/00/d8/fc/00d8fc5ea49d797329035a9968442a51.jpg", file: "game1/index.html", color: "#ff6600" },
+      { title: "DARE TRAFFIC", genre: "ACTION // TRAFFIC DASH", img: "https://i.pinimg.com/736x/86/a9/97/86a99795822fbb91efd6a4ace962ea3c.jpg", file: "marioo.html", color: "#ff2a2a" }
     ];
 
     const THEMES = [
@@ -2235,6 +2279,8 @@ body.bb-profile-native .bg-layer::after {
       GAMES.forEach((game, i) => {
         const card = document.createElement('div');
         card.className = 'game-card';
+        card.style.setProperty('--card-accent', game.color);
+        card.style.setProperty('--card-glow', game.color + '44');
         card.onclick = () => {
           if (activeCarouselIdx === i) launchGame();
           else { 
@@ -2245,7 +2291,11 @@ body.bb-profile-native .bg-layer::after {
         card.innerHTML = `
           <img src="${game.img}" alt="${game.title}">
           <div class="card-info">
-            <div class="card-title">${game.title}</div>
+            <div class="card-header-badge" style="color:${game.color}; border-color:${game.color}44;">
+              <i class="badge-dot" style="background:${game.color}; box-shadow:0 0 8px ${game.color};"></i>
+              READY TO PLAY
+            </div>
+            <div class="card-title" style="background: linear-gradient(135deg, #ffffff 40%, ${game.color} 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${game.title}</div>
             <div class="card-genre">${game.genre}</div>
           </div>
         `;
