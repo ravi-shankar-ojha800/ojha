@@ -1814,6 +1814,64 @@ body.bb-profile-native .bg-layer::after {
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="backend.js"></script>
+  <script>
+    /* Fallback: If backend.js fails to load, create a mock OJHA_BACKEND for offline/local use */
+    if (typeof OJHA_BACKEND === 'undefined') {
+      window.OJHA_BACKEND = {
+        generateUID: function() {
+          return 'OJ-' + Math.floor(Math.random() * 99) + '-' + Math.floor(Math.random() * 999);
+        },
+        signInWithGoogle: function() {
+          return Promise.reject(new Error('Google Sign-In requires backend.js'));
+        },
+        registerWithEmail: function(email, username, password) {
+          return Promise.reject(new Error('Email registration requires backend.js'));
+        },
+        signInWithEmail: function(email, password) {
+          return Promise.reject(new Error('Email sign-in requires backend.js'));
+        },
+        linkGuestToGoogle: function() {
+          return Promise.reject(new Error('Account linking requires backend.js'));
+        },
+        deleteAccount: function() {
+          return Promise.resolve();
+        },
+        submitBugReport: function() {
+          return Promise.resolve();
+        },
+        submitScore: function(playerState, scoreData) {
+          return Promise.resolve({ isHighScore: false });
+        },
+        getLeaderboard: function() {
+          return [];
+        },
+        getFriendsList: function() {
+          return [];
+        },
+        getFriendRequests: function() {
+          return [];
+        },
+        searchUsers: function() {
+          return [];
+        },
+        getUserProfile: function(uid) {
+          return { uid: uid, username: 'User', avatar: 'https://i.pinimg.com/1200x/a1/8a/10/a18a106fbc97ff3acaf1463287a29985.jpg', level: 1, country: '🇮🇳', highScore: 0 };
+        },
+        sendFriendRequest: function() {
+          return Promise.reject(new Error('Friend system requires backend.js'));
+        },
+        acceptFriendRequest: function() {
+          return Promise.reject(new Error('Friend system requires backend.js'));
+        },
+        rejectFriendRequest: function() {
+          return Promise.resolve();
+        },
+        removeFriend: function() {
+          return Promise.resolve();
+        }
+      };
+    }
+  </script>
 </head>
 
 <body>
