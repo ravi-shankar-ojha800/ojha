@@ -1872,9 +1872,142 @@ body.bb-profile-native .bg-layer::after {
       };
     }
   </script>
+  <!-- MOBILE ROTATE PROMPT (ADDITIVE ONLY) -->
+  <style>
+    #mobileRotatePrompt {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      padding: 40px;
+    }
+    #mobileRotatePrompt.show { display: flex; }
+    .rotate-icon {
+      width: 120px;
+      height: 120px;
+      animation: rotatePhone 1.5s ease-in-out infinite;
+    }
+    @keyframes rotatePhone {
+      0% { transform: rotate(0deg); }
+      25% { transform: rotate(90deg); }
+      50% { transform: rotate(90deg); }
+      75% { transform: rotate(0deg); }
+      100% { transform: rotate(0deg); }
+    }
+    .rotate-icon svg { width: 100%; height: 100%; }
+    .rotate-text {
+      font-family: var(--font-hud);
+      color: #fff;
+      font-size: 1.5rem;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    .rotate-subtext {
+      font-family: var(--font-mono);
+      color: rgba(255,255,255,0.6);
+      font-size: 1rem;
+      text-align: center;
+    }
+    .rotate-btn {
+      padding: 18px 50px;
+      background: var(--clr-accent);
+      color: #000;
+      border: none;
+      border-radius: 50px;
+      font-family: var(--font-hud);
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+    .rotate-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px var(--clr-accent-glow);
+    }
+    /* RESOURCE PRELOADER */
+    #resourcePreloader {
+      position: fixed;
+      inset: 0;
+      z-index: 999998;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 25px;
+    }
+    #resourcePreloader.show { display: flex; }
+    .preloader-logo {
+      font-family: var(--font-hud);
+      font-size: 3rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 10px;
+      text-shadow: 0 0 30px rgba(255,255,255,0.3);
+    }
+    .preloader-bar-container {
+      width: 300px;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .preloader-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--clr-accent);
+      box-shadow: 0 0 15px var(--clr-accent);
+      transition: width 0.3s ease;
+      border-radius: 3px;
+    }
+    .preloader-text {
+      font-family: var(--font-mono);
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+    }
+    @media (max-width: 768px) {
+      .preloader-logo { font-size: 2rem; letter-spacing: 6px; }
+      .preloader-bar-container { width: 250px; }
+    }
+  </style>
 </head>
 
 <body>
+
+  <!-- MOBILE ROTATE PROMPT (ADDITIVE ONLY - Shows on portrait mode on mobile) -->
+  <div id="mobileRotatePrompt">
+    <div class="rotate-icon">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="15" width="40" height="70" rx="6" stroke="#00f0ff" stroke-width="3" fill="none"/>
+        <rect x="35" y="22" width="30" height="50" rx="2" fill="rgba(0,240,255,0.1)"/>
+        <circle cx="50" cy="78" r="3" fill="#00f0ff"/>
+        <path d="M45 10 L50 5 L55 10" stroke="#00f0ff" stroke-width="2" fill="none"/>
+      </svg>
+    </div>
+    <div class="rotate-text">ROTATE YOUR PHONE</div>
+    <div class="rotate-subtext">For the best experience, please rotate your device to landscape mode</div>
+    <button class="rotate-btn" onclick="autoRotateScreen()">AUTO ROTATE</button>
+  </div>
+
+  <!-- RESOURCE PRELOADER (ADDITIVE ONLY - Loads all assets before showing site) -->
+  <div id="resourcePreloader">
+    <div class="preloader-logo">OJHA</div>
+    <div class="preloader-bar-container">
+      <div class="preloader-bar-fill" id="preloaderBarFill"></div>
+    </div>
+    <div class="preloader-text" id="preloaderText">LOADING RESOURCES... 0%</div>
+  </div>
 
   <!-- ==================================================
        INTRODUCTION PAGE (NEW - ADDITIVE ONLY)
@@ -2976,6 +3109,170 @@ body.bb-profile-native .bg-layer::after {
     // Profile single background (PROF1 only)
     
     /* =========================================
+       MOBILE FEATURES (ADDITIVE - NEW)
+       Rotate prompt, auto-rotate, preloader
+       ========================================= */
+    let selectedReviewRating = 0;
+
+    // Check if mobile device
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+    }
+
+    // Show rotate prompt on mobile portrait
+    function checkOrientation() {
+      const rotatePrompt = document.getElementById('mobileRotatePrompt');
+      if (!rotatePrompt) return;
+
+      if (isMobileDevice() && window.innerHeight > window.innerWidth) {
+        rotatePrompt.classList.add('show');
+      } else {
+        rotatePrompt.classList.remove('show');
+      }
+    }
+
+    // Auto rotate screen to landscape
+    function autoRotateScreen() {
+      const rotatePrompt = document.getElementById('mobileRotatePrompt');
+      
+      // Try to lock orientation to landscape
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').then(() => {
+          rotatePrompt.classList.remove('show');
+          enterFullscreen();
+        }).catch(() => {
+          // Fallback: just go fullscreen
+          rotatePrompt.classList.remove('show');
+          enterFullscreen();
+        });
+      } else {
+        rotatePrompt.classList.remove('show');
+        enterFullscreen();
+      }
+    }
+
+    // Enter fullscreen mode
+    function enterFullscreen() {
+      const docElm = document.documentElement;
+      if (docElm.requestFullscreen) {
+        docElm.requestFullscreen().catch(() => {});
+      } else if (docElm.mozRequestFullScreen) {
+        docElm.mozRequestFullScreen();
+      } else if (docElm.webkitRequestFullScreen) {
+        docElm.webkitRequestFullScreen();
+      } else if (docElm.msRequestFullscreen) {
+        docElm.msRequestFullscreen();
+      }
+    }
+
+    // Exit fullscreen mode
+    function exitFullscreen() {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+
+    // Resource Preloader - Load all GIFs, images, videos before showing site
+    function startResourcePreloader() {
+      const preloader = document.getElementById('resourcePreloader');
+      const barFill = document.getElementById('preloaderBarFill');
+      const preloaderText = document.getElementById('preloaderText');
+      
+      if (!preloader || !barFill || !preloaderText) return;
+
+      // Show preloader on mobile
+      if (isMobileDevice()) {
+        preloader.classList.add('show');
+      }
+
+      // Collect all resources to preload
+      const resources = [];
+      
+      // Add all game images
+      GAMES.forEach(game => {
+        resources.push(game.img);
+      });
+      
+      // Add all game detailed images
+      if (typeof GAMES_DETAILED !== 'undefined') {
+        GAMES_DETAILED.forEach(game => {
+          resources.push(game.img);
+        });
+      }
+      
+      // Add avatar images
+      AVATARS.forEach(avatar => {
+        resources.push(avatar);
+      });
+      
+      // Add banner images
+      BANNERS.forEach(banner => {
+        resources.push(banner);
+      });
+      
+      // Add store avatars
+      if (typeof STORE_AVATARS !== 'undefined') {
+        STORE_AVATARS.forEach(avatar => {
+          resources.push(avatar);
+        });
+      }
+      
+      // Add badge images
+      BADGES.forEach(badge => {
+        resources.push(badge);
+      });
+
+      let loaded = 0;
+      const total = resources.length;
+
+      if (total === 0) {
+        finishPreloader();
+        return;
+      }
+
+      // Update progress bar
+      const updateProgress = () => {
+        loaded++;
+        const percent = Math.min(100, Math.round((loaded / total) * 100));
+        barFill.style.width = percent + '%';
+        preloaderText.textContent = 'LOADING RESOURCES... ' + percent + '%';
+        
+        if (loaded >= total) {
+          setTimeout(finishPreloader, 300);
+        }
+      };
+
+      // Load each image
+      resources.forEach(src => {
+        const img = new Image();
+        img.onload = updateProgress;
+        img.onerror = updateProgress;
+        img.src = src;
+      });
+
+      // Fallback: finish after 5 seconds max
+      setTimeout(finishPreloader, 5000);
+
+      function finishPreloader() {
+        preloader.classList.remove('show');
+        // Now check orientation after loading
+        checkOrientation();
+      }
+    }
+
+    // Listen for orientation changes
+    window.addEventListener('orientationchange', () => {
+      setTimeout(checkOrientation, 100);
+    });
+    window.addEventListener('resize', checkOrientation);
+
+    /* =========================================
        INITIALIZATION
        ========================================= */
     document.addEventListener('DOMContentLoaded', () => {
@@ -3020,6 +3317,12 @@ body.bb-profile-native .bg-layer::after {
       buildEvents();
       buildAchievements();
       buildStore();
+      
+      // Start resource preloader for mobile
+      startResourcePreloader();
+      
+      // Check orientation for mobile
+      checkOrientation();
       
       // Check daily login
       checkDailyLogin();
