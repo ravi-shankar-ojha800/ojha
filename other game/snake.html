@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Curved CRT Retro Snake Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        /* WebGL Fullscreen CRT Canvas */
+        #crtCanvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        /* Hidden 2D Canvas used as a WebGL Texture Source */
+        #gameCanvas {
+            display: none;
+        }
+
+        /* Overlay UI Styling */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(3, 18, 8, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
+            color: #33ff66;
+            text-shadow: 0 0 12px rgba(51, 255, 102, 0.8);
+        }
+
+        .overlay h1 {
+            font-size: 20px;
+            margin-bottom: 24px;
+            line-height: 1.8;
+            letter-spacing: 2px;
+        }
+
+        .btn {
+            background-color: #33ff66;
+            color: #031208;
+            border: none;
+            padding: 16px 32px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(51, 255, 102, 0.6);
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #ffffff;
+            box-shadow: 0 0 30px #ffffff;
+            transform: scale(1.05);
+        }
+
+        .controls-hint {
+            font-size: 10px;
+            margin-top: 24px;
+            color: #21a842;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Onscreen WebGL Canvas with Real 3D Curved CRT Shader -->
+    <canvas id="crtCanvas"></canvas>
+
+    <!-- Offscreen 2D Buffer Canvas -->
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <!-- Start / Pause Overlays -->
+    <div id="startOverlay" class="overlay">
+        <h1>3D CURVED CRT SNAKE<br><br>PRESS START</h1>
+        <button class="btn" id="startBtn">START GAME</button>
+        <div class="controls-hint">
+            ARROW KEYS / WASD TO MOVE<br>
+            SPACEBAR TO PAUSE<br>
+            WALLS & SELF-BITING ARE PASS-THROUGH (NO DEATH)
+        </div>
+    </div>
+
+    <div id="pauseOverlay" class="overlay" style="display: none;">
+        <h1>GAME PAUSED<br><br>PRESS SPACE TO RESUME</h1>
+    </div>
+
+    <!-- WebGL Shaders for 3D CRT Glass Curvature -->
+    <script id="vs" type="x-shader/x-vertex">
+        attribute vec2 position;
+        varying vec2 vUv;
+        void main() {
+            vUv = position * 0.5 + 0.5;
+            vUv.y = 1.0 - vUv.y; // Match WebGL coordinate system
+            gl_Position = vec4(position, 0.0, 1.0);
+        }
+    </script>
+
+    <script id="fs" type="x-shader/x-fragment">
+        precision mediump float;
+        uniform sampler2D uTexture;
+        uniform float uTime;
+        varying vec2 vUv;
+
+        // Realistic 3D CRT Glass Barrel Distortion Algorithm
+        vec2 curveUV(vec2 uv) {
+            uv = uv * 2.0 - 1.0;
+            // Stretch edges outwards while keeping center linear
+            vec2 offset = abs(uv.yx) / vec2(5.5, 3.8);
+            uv = uv + uv * offset * offset;
+            uv = uv * 0.5 + 0.5;
+            return uv;
+        }
+
+        void main() {
+            vec2 uv = curveUV(vUv);
+
+            // Dark bevel border outside screen curvature
+            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+                gl_FragColor = vec4(0.01, 0.04, 0.01, 1.0);
+                return;
+            }
+
+            vec4 col = texture2D(uTexture, uv);
+
+            // Warped Scanline Effect following curved CRT geometry
+            float scanline = sin(uv.y * 400.0 * 3.14159) * 0.18;
+            col.rgb -= scanline;
+
+            // CRT Spherical Tube Vignette Shadow
+            vec2 centerUV = uv - 0.5;
+            float vignette = 1.0 - dot(centerUV, centerUV) * 0.75;
+            col.rgb *= vignette;
+
+            // Screen Reflection Sheen / Glare Light
+            float glare = max(0.0, (0.5 - length(uv - vec2(0.25, 0.25)))) * 0.12;
+            col.rgb += vec2(0.1, 0.3) * glare;
+
+            // Green Monochrome Phosphor Tint
+            col.r *= 0.35;
+            col.b *= 0.35;
+            col.g = pow(col.g, 0.85) * 1.15;
+
+            // Subtle analogue signal noise flickering
+            float noise = fract(sin(dot(uv * uTime, vec2(12.9898, 78.233))) * 43758.5453) * 0.02;
+            col.rgb += noise;
+
+            gl_FragColor = vec4(col.rgb, 1.0);
+        }
+    </script>
+
+    <script>
+        // --- Game Setup & Loop ---
+        const gameCanvas = document.getElementById('gameCanvas');
+        const gCtx = gameCanvas.getContext('2d');
+
+        const gridSize = 20;
+        const tileCountX = gameCanvas.width / gridSize;
+        const tileCountY = gameCanvas.height / gridSize;
+
+        let snake = [];
+        let food = { x: 0, y: 0 };
+        let dx = 1;
+        let dy = 0;
+        let score = 0;
+        let highScore = localStorage.getItem('3d_crt_snake_hi') || 0;
+        let isPaused = false;
+        let isRunning = false;
+        let changingDirection = false;
+
+        const startOverlay = document.getElementById('startOverlay');
+        const pauseOverlay = document.getElementById('pauseOverlay');
+        const startBtn = document.getElementById('startBtn');
+
+        // Synth Retro Audio via Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'eat') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
+                gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            }
+        }
+
+        function initGame() {
+            snake = [
+                { x: 15, y: 15 },
+                { x: 14, y: 15 },
+                { x: 13, y: 15 },
+                { x: 12, y: 15 }
+            ];
+            dx = 1;
+            dy = 0;
+            score = 0;
+            createFood();
+        }
+
+        function createFood() {
+            food.x = Math.floor(Math.random() * tileCountX);
+            food.y = Math.floor(Math.random() * tileCountY);
+            snake.forEach(part => {
+                if (part.x === food.x && part.y === food.y) createFood();
+            });
+        }
+
+        function updateGame() {
+            if (isPaused || !isRunning) return;
+
+            changingDirection = false;
+
+            // Move Snake Head
+            let head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+            // Wall Pass-Through (Wrap Around Screen Edges)
+            if (head.x < 0) head.x = tileCountX - 1;
+            if (head.x >= tileCountX) head.x = 0;
+            if (head.y < 0) head.y = tileCountY - 1;
+            if (head.y >= tileCountY) head.y = 0;
+
+            snake.unshift(head);
+
+            // Food Collisions
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('3d_crt_snake_hi', highScore);
+                }
+                playSound('eat');
+                createFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function drawGame() {
+            // Background phosphor grid
+            gCtx.fillStyle = '#031208';
+            gCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+            gCtx.strokeStyle = '#082810';
+            gCtx.lineWidth = 1;
+            for (let i = 0; i < gameCanvas.width; i += gridSize) {
+                gCtx.beginPath(); gCtx.moveTo(i, 0); gCtx.lineTo(i, gameCanvas.height); gCtx.stroke();
+            }
+            for (let j = 0; j < gameCanvas.height; j += gridSize) {
+                gCtx.beginPath(); gCtx.moveTo(0, j); gCtx.lineTo(gameCanvas.width, j); gCtx.stroke();
+            }
+
+            // Draw HUD
+            gCtx.font = '14px "Press Start 2P"';
+            gCtx.fillStyle = '#33ff66';
+            gCtx.shadowColor = '#33ff66';
+            gCtx.shadowBlur = 8;
+            gCtx.fillText(`SCORE:${score}`, 20, 35);
+            gCtx.fillText(`HI:${highScore}`, gameCanvas.width - 180, 35);
+
+            // Draw Food
+            gCtx.fillStyle = '#ffff33';
+            gCtx.shadowColor = '#ffff33';
+            gCtx.shadowBlur = 12;
+            gCtx.beginPath();
+            gCtx.arc(food.x * gridSize + gridSize/2, food.y * gridSize + gridSize/2, gridSize/2 - 2, 0, Math.PI * 2);
+            gCtx.fill();
+
+            // Draw Snake
+            snake.forEach((part, index) => {
+                gCtx.fillStyle = index === 0 ? '#b3ffcc' : '#33ff66';
+                gCtx.shadowColor = '#33ff66';
+                gCtx.shadowBlur = index === 0 ? 12 : 6;
+                gCtx.fillRect(part.x * gridSize + 1, part.y * gridSize + 1, gridSize - 2, gridSize - 2);
+            });
+
+            gCtx.shadowBlur = 0;
+        }
+
+        // --- Keyboard Controls ---
+        document.addEventListener('keydown', (e) => {
+            if (e.keyCode === 32) { // Spacebar for Pause
+                if (isRunning) {
+                    isPaused = !isPaused;
+                    pauseOverlay.style.display = isPaused ? 'flex' : 'none';
+                }
+                return;
+            }
+
+            if (isPaused || changingDirection || !isRunning) return;
+
+            const LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
+            const W = 87, A = 65, S = 83, D = 68;
+
+            if ((e.keyCode === LEFT || e.keyCode === A) && dx !== 1) { dx = -1; dy = 0; changingDirection = true; }
+            if ((e.keyCode === UP || e.keyCode === W) && dy !== 1) { dx = 0; dy = -1; changingDirection = true; }
+            if ((e.keyCode === RIGHT || e.keyCode === D) && dx !== -1) { dx = 1; dy = 0; changingDirection = true; }
+            if ((e.keyCode === DOWN || e.keyCode === S) && dy !== -1) { dx = 0; dy = 1; changingDirection = true; }
+        });
+
+        startBtn.addEventListener('click', () => {
+            startOverlay.style.display = 'none';
+            isRunning = true;
+            isPaused = false;
+            initGame();
+        });
+
+        // --- WebGL Shader Renderer Pipeline ---
+        const crtCanvas = document.getElementById('crtCanvas');
+        const gl = crtCanvas.getContext('webgl');
+
+        function resizeCanvas() {
+            crtCanvas.width = window.innerWidth;
+            crtCanvas.height = window.innerHeight;
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            return shader;
+        }
+
+        const vsSource = document.getElementById('vs').text;
+        const fsSource = document.getElementById('fs').text;
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        gl.useProgram(program);
+
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            -1, -1,  1, -1, -1,  1,
+            -1,  1,  1, -1,  1,  1,
+        ]), gl.STATIC_DRAW);
+
+        const positionLocation = gl.getAttribLocation(program, 'position');
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+        // Texture Setup
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+        const uTimeLocation = gl.getUniformLocation(program, 'uTime');
+
+        resizeCanvas();
+
+        // Game Speed & WebGL Render Loops
+        let lastGameTick = 0;
+        const gameSpeed = 90; // ms per frame
+
+        function renderLoop(time) {
+            if (time - lastGameTick > gameSpeed) {
+                updateGame();
+                drawGame();
+                lastGameTick = time;
+            }
+
+            // Upload 2D game canvas as WebGL texture
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, gameCanvas);
+
+            gl.uniform1f(uTimeLocation, time * 0.001);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            requestAnimationFrame(renderLoop);
+        }
+
+        drawGame();
+        requestAnimationFrame(renderLoop);
+    </script>
+</body>
+</html>

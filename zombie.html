@@ -1284,6 +1284,11 @@
         }
 
         function completeWave() {
+            if (window.parent && window.parent !== window) {
+                const calcScore = currentWave * 850 + Math.floor(templeHP);
+                window.parent.postMessage({ type: 'OJHA_SCORE_SUBMIT', gameId: 'zombie', gameTitle: 'TEMPLE FIGHTER', score: calcScore, level: currentWave, won: currentWave >= MAX_WAVES }, '*');
+            }
+
             if (currentWave >= MAX_WAVES) {
                 isGameWon = true;
                 showNotification("VICTORY! You defended the Temple across 20 Waves!");

@@ -843,6 +843,10 @@
           if (distToPlayer < 1.8) {
             monsterState = 'JUMPSCARE';
             stateTimer = 0;
+            if (window.parent && window.parent !== window && !window._scoreSent) {
+              window._scoreSent = true;
+              window.parent.postMessage({ type: 'OJHA_SCORE_SUBMIT', gameId: 'pawman', gameTitle: 'GOOD DREAM', score: Math.floor(matchTimer * 90), level: Math.floor(matchTimer / 30) + 1, won: false }, '*');
+            }
           }
 
           if (stateTimer >= CHASE_DURATION) {

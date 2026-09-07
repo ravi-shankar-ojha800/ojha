@@ -1928,8 +1928,16 @@ class GameEngine {
         // 9. Draw State Screens
         if (this.state === 'GAMEOVER') {
             this.screens.drawGameOver(this.ctx, this.score);
+            if (window.parent && window.parent !== window && !this._scoreSubmitted) {
+                this._scoreSubmitted = true;
+                window.parent.postMessage({ type: 'OJHA_SCORE_SUBMIT', gameId: 'figth', gameTitle: 'PIXA JUMPER', score: this.score, level: this.currentLevel || 1, won: false }, '*');
+            }
         } else if (this.state === 'VICTORY') {
             this.screens.drawVictory(this.ctx, this.currentLevel, this.score, this.timeBonus);
+            if (window.parent && window.parent !== window && !this._scoreSubmitted) {
+                this._scoreSubmitted = true;
+                window.parent.postMessage({ type: 'OJHA_SCORE_SUBMIT', gameId: 'figth', gameTitle: 'PIXA JUMPER', score: this.score, level: this.currentLevel || 1, won: true }, '*');
+            }
         }
     }
 }

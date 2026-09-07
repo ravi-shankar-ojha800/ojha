@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dominoes Clean Edition</title>
+    <style>
+        :root {
+            --bg-color: #f7f7f4;
+            --card-bg: #ffffff;
+            --primary-black: #111111;
+            --accent-yellow: #ffde00;
+            --accent-yellow-hover: #f0d100;
+            --shadow: 8px 8px 0px #111111;
+            --shadow-sm: 4px 4px 0px #111111;
+            --transition: all 0.15s ease-in-out;
+            --board-bg: #faf8f5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--primary-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .landscape-card {
+            background-color: var(--card-bg);
+            border: 4px solid var(--primary-black);
+            box-shadow: var(--shadow);
+            border-radius: 20px;
+            padding: 30px;
+            width: 95vw;
+            max-width: 1200px;
+            height: 90vh;
+            max-height: 750px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            margin-bottom: 15px;
+            border-bottom: 4px solid var(--primary-black);
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            height: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .screen-title {
+            font-size: 1.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        /* Menu Layout */
+        .menu-layout {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            gap: 40px;
+        }
+
+        .menu-content-side {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .menu-gif-side {
+            flex: 1.2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .menu-gif-side img {
+            width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            user-select: none;
+        }
+
+        .btn-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .btn-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .action-btn {
+            background-color: var(--card-bg);
+            border: 3px solid var(--primary-black);
+            box-shadow: var(--shadow-sm);
+            border-radius: 12px;
+            padding: 18px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background-color: var(--accent-yellow);
+            transform: translate(-3px, -3px);
+            box-shadow: 7px 7px 0px var(--primary-black);
+        }
+
+        .action-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        .action-btn.primary {
+            background-color: var(--accent-yellow);
+        }
+
+        .action-btn.primary:hover {
+            background-color: var(--accent-yellow-hover);
+        }
+
+        /* Top Right Menu Button for Game Screen */
+        .top-right-container {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .icon-btn {
+            background-color: var(--accent-yellow);
+            border: 3px solid var(--primary-black);
+            box-shadow: var(--shadow-sm);
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .icon-btn:hover {
+            background-color: var(--accent-yellow-hover);
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--primary-black);
+        }
+
+        /* Dropdown Modal inside Game Screen */
+        .menu-overlay {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background-color: var(--card-bg);
+            border: 3px solid var(--primary-black);
+            box-shadow: var(--shadow);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 200px;
+            z-index: 20;
+            transform: scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.1s ease-in-out;
+        }
+
+        .menu-overlay.open {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .menu-overlay button {
+            width: 100%;
+            padding: 10px;
+            font-weight: 900;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            border: 3px solid var(--primary-black);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .menu-overlay button:hover {
+            background-color: var(--accent-yellow);
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0px var(--primary-black);
+        }
+
+        /* Dominoes Game Layout */
+        .game-layout {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 100%;
+            height: 100%;
+            gap: 15px;
+            padding-top: 10px;
+        }
+
+        .game-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--accent-yellow);
+            border: 3px solid var(--primary-black);
+            padding: 14px 22px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            font-weight: 900;
+            font-size: 1.15rem;
+        }
+
+        .board-train-area {
+            flex: 1;
+            background-color: var(--board-bg);
+            border: 3px solid var(--primary-black);
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 20px;
+            gap: 12px;
+            min-height: 180px;
+        }
+
+        .player-controls-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hand-container {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            padding: 10px 5px;
+            align-items: center;
+            min-height: 115px;
+        }
+
+        .player-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Domino Tile Component */
+        .domino-tile {
+            width: 46px;
+            height: 88px;
+            background: #ffffff;
+            border: 3px solid var(--primary-black);
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 3px;
+            cursor: pointer;
+            transition: var(--transition);
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .domino-tile:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0px var(--primary-black);
+            background-color: var(--accent-yellow);
+        }
+
+        .domino-tile.horizontal {
+            width: 88px;
+            height: 46px;
+            flex-direction: row;
+        }
+
+        .domino-half {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 2px;
+            align-items: center;
+            justify-items: center;
+        }
+
+        .domino-tile:not(.horizontal) .domino-half.top {
+            border-bottom: 2px solid var(--primary-black);
+        }
+
+        .domino-tile.horizontal .domino-half.top {
+            border-right: 2px solid var(--primary-black);
+        }
+
+        .pip {
+            width: 7px;
+            height: 7px;
+            background-color: var(--primary-black);
+            border-radius: 50%;
+        }
+
+        /* Post Game Layout */
+        .gameover-layout {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            gap: 40px;
+        }
+
+        .gameover-content-side {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .gameover-gif-side {
+            flex: 1.2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .gameover-gif-side img {
+            width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            user-select: none;
+        }
+
+        .result-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-align: center;
+            background-color: var(--accent-yellow);
+            border: 3px solid var(--primary-black);
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            width: 100%;
+            max-width: 450px;
+            letter-spacing: -1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="landscape-card">
+        <h1>Dominoes</h1>
+
+        <div id="screen-mode" class="screen active">
+            <div class="menu-layout">
+                <div class="menu-content-side">
+                    <div class="screen-title" style="margin-bottom: 0;">Select Game Mode</div>
+                    <div class="btn-grid">
+                        <button class="action-btn primary" onclick="selectMode('ai')">AI Mode</button>
+                        <button class="action-btn" onclick="selectMode('pvp')">2 Player Mode</button>
+                    </div>
+                </div>
+                <div class="menu-gif-side">
+                    <img src="https://i.pinimg.com/originals/15/ce/bd/15cebdd938867cdc385ca6d175908549.gif" alt="Cool Character GIF">
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-game" class="screen">
+            <div class="top-right-container">
+                <button class="icon-btn" onclick="toggleMenu()">Menu ⚙️</button>
+                <div class="menu-overlay" id="game-menu">
+                    <button onclick="resetGame(); toggleMenu();">Restart</button>
+                    <button onclick="goToScreen('screen-mode'); toggleMenu();">Main Menu</button>
+                    <button onclick="toggleMenu()" style="background-color: var(--primary-black); color: white;">Close</button>
+                </div>
+            </div>
+
+            <div class="game-layout">
+                <div class="game-header-info" id="game-status-bar">
+                    <span id="turn-indicator" style="font-size: 1.2rem;">Player 1's Turn</span>
+                    <span id="boneyard-count">Boneyard: 14</span>
+                    <span id="opponent-info">AI Tiles: 7</span>
+                </div>
+
+                <div class="board-train-area" id="board-train">
+                    <span style="font-weight: 900; font-size: 1.1rem; opacity: 0.6;">Board is empty. Play any tile!</span>
+                </div>
+
+                <div class="player-controls-area">
+                    <div class="player-toolbar">
+                        <span style="font-weight: 900; font-size: 1.2rem;" id="player-label">Your Hand</span>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="action-btn" style="padding: 10px 18px; font-size: 0.95rem;" onclick="drawTile()" id="draw-btn">Draw Tile</button>
+                            <button class="action-btn" style="padding: 10px 18px; font-size: 0.95rem;" onclick="passTurn()" id="pass-btn">Pass Turn</button>
+                        </div>
+                    </div>
+                    <div class="hand-container" id="player-hand"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-gameover" class="screen">
+            <div class="gameover-layout">
+                <div class="gameover-content-side">
+                    <div class="result-title" id="final-result-text">Player 1 Wins!</div>
+                    <div class="btn-vertical" style="max-width: 400px;">
+                        <button class="action-btn primary" onclick="startNewGame()">Play Again</button>
+                        <button class="action-btn" onclick="goToScreen('screen-mode')">Main Menu</button>
+                    </div>
+                </div>
+                <div class="gameover-gif-side">
+                    <img src="https://i.pinimg.com/originals/15/ce/bd/15cebdd938867cdc385ca6d175908549.gif" alt="Cool Character GIF">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let gameMode = 'ai';
+        let currentPlayer = 1;
+        let player1Hand = [];
+        let player2OrAIHand = [];
+        let boneyard = [];
+        let boardTiles = [];
+        let leftEnd = null;
+        let rightEnd = null;
+        let isGameActive = true;
+
+        const pipPositions = {
+            0: [],
+            1: [4],
+            2: [0, 8],
+            3: [0, 4, 8],
+            4: [0, 2, 6, 8],
+            5: [0, 2, 4, 6, 8],
+            6: [0, 2, 3, 5, 6, 8]
+        };
+
+        function goToScreen(screenId) {
+            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+            document.getElementById(screenId).classList.add("active");
+            document.getElementById("game-menu").classList.remove("open");
+        }
+
+        function toggleMenu() {
+            document.getElementById("game-menu").classList.toggle("open");
+        }
+
+        function selectMode(mode) {
+            gameMode = mode;
+            startNewGame();
+        }
+
+        function startNewGame() {
+            let set = createDominoSet();
+            shuffle(set);
+
+            player1Hand = set.splice(0, 7);
+            player2OrAIHand = set.splice(0, 7);
+            boneyard = set;
+            boardTiles = [];
+            leftEnd = null;
+            rightEnd = null;
+            currentPlayer = 1;
+            isGameActive = true;
+
+            document.getElementById("opponent-info").innerText = gameMode === 'ai' ? `AI Tiles: ${player2OrAIHand.length}` : `Player 2 Tiles: ${player2OrAIHand.length}`;
+            document.getElementById("player-label").innerText = gameMode === 'ai' ? "Your Hand" : "Player 1 Hand";
+
+            renderGame();
+            goToScreen("screen-game");
+
+            if (gameMode === 'ai' && currentPlayer === 2) {
+                setTimeout(aiTurn, 600);
+            }
+        }
+
+        function resetGame() {
+            startNewGame();
+        }
+
+        function createDominoSet() {
+            let set = [];
+            for (let i = 0; i <= 6; i++) {
+                for (let j = i; j <= 6; j++) {
+                    set.push({ v1: i, v2: j });
+                }
+            }
+            return set;
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function renderGame() {
+            let turnText = gameMode === 'ai' ? (currentPlayer === 1 ? "Your Turn" : "AI is thinking...") : `Player ${currentPlayer}'s Turn`;
+            document.getElementById("turn-indicator").innerText = turnText;
+            document.getElementById("boneyard-count").innerText = `Boneyard: ${boneyard.length}`;
+            document.getElementById("opponent-info").innerText = gameMode === 'ai' ? `AI Tiles: ${player2OrAIHand.length}` : `Player 2 Tiles: ${player2OrAIHand.length}`;
+
+            const trainArea = document.getElementById("board-train");
+            trainArea.innerHTML = "";
+            if (boardTiles.length === 0) {
+                trainArea.innerHTML = '<span style="font-weight: 900; font-size: 1.1rem; opacity: 0.6;">Board is empty. Play any tile!</span>';
+            } else {
+                boardTiles.forEach(tile => {
+                    trainArea.appendChild(createTileElement(tile.v1, tile.v2, true));
+                });
+            }
+
+            const handContainer = document.getElementById("player-hand");
+            handContainer.innerHTML = "";
+            let currentHand = currentPlayer === 1 ? player1Hand : player2OrAIHand;
+
+            currentHand.forEach((tile, index) => {
+                let tileEl = createTileElement(tile.v1, tile.v2, false);
+                tileEl.onclick = () => handleTileClick(index);
+                handContainer.appendChild(tileEl);
+            });
+
+            if (player1Hand.length === 0) {
+                endGame(gameMode === 'ai' ? "You Win!" : "Player 1 Wins!");
+            } else if (player2OrAIHand.length === 0) {
+                endGame(gameMode === 'ai' ? "AI Wins!" : "Player 2 Wins!");
+            }
+        }
+
+        function createTileElement(v1, v2, horizontal) {
+            let el = document.createElement("div");
+            el.className = `domino-tile ${horizontal ? 'horizontal' : ''}`;
+            
+            let half1 = document.createElement("div");
+            half1.className = "domino-half top";
+            fillHalf(half1, v1);
+
+            let half2 = document.createElement("div");
+            half2.className = "domino-half";
+            fillHalf(half2, v2);
+
+            el.appendChild(half1);
+            el.appendChild(half2);
+            return el;
+        }
+
+        function fillHalf(halfEl, value) {
+            let positions = pipPositions[value] || [];
+            for (let i = 0; i < 9; i++) {
+                let cell = document.createElement("div");
+                if (positions.includes(i)) {
+                    let pip = document.createElement("div");
+                    pip.className = "pip";
+                    cell.appendChild(pip);
+                }
+                halfEl.appendChild(cell);
+            }
+        }
+
+        function handleTileClick(index) {
+            if (!isGameActive) return;
+            if (gameMode === 'ai' && currentPlayer === 2) return;
+
+            let hand = currentPlayer === 1 ? player1Hand : player2OrAIHand;
+            let tile = hand[index];
+
+            if (boardTiles.length === 0) {
+                hand.splice(index, 1);
+                boardTiles.push(tile);
+                leftEnd = tile.v1;
+                rightEnd = tile.v2;
+                switchTurn();
+            } else {
+                let matched = false;
+                if (tile.v1 === leftEnd || tile.v2 === leftEnd) {
+                    hand.splice(index, 1);
+                    if (tile.v2 === leftEnd) {
+                        boardTiles.unshift({ v1: tile.v2, v2: tile.v1 });
+                        leftEnd = tile.v1;
+                    } else {
+                        boardTiles.unshift({ v1: tile.v1, v2: tile.v2 });
+                        leftEnd = tile.v2;
+                    }
+                    matched = true;
+                } else if (tile.v1 === rightEnd || tile.v2 === rightEnd) {
+                    hand.splice(index, 1);
+                    if (tile.v1 === rightEnd) {
+                        boardTiles.push({ v1: tile.v1, v2: tile.v2 });
+                        rightEnd = tile.v2;
+                    } else {
+                        boardTiles.push({ v1: tile.v2, v2: tile.v1 });
+                        rightEnd = tile.v1;
+                    }
+                    matched = true;
+                }
+
+                if (matched) {
+                    switchTurn();
+                } else {
+                    alert("This tile does not match either end of the board!");
+                }
+            }
+        }
+
+        function drawTile() {
+            if (!isGameActive) return;
+            if (gameMode === 'ai' && currentPlayer === 2) return;
+
+            if (boneyard.length === 0) {
+                alert("Boneyard is empty! You must pass your turn.");
+                return;
+            }
+
+            let drawn = boneyard.pop();
+            if (currentPlayer === 1) {
+                player1Hand.push(drawn);
+            } else {
+                player2OrAIHand.push(drawn);
+            }
+            renderGame();
+        }
+
+        function passTurn() {
+            if (!isGameActive) return;
+            if (gameMode === 'ai' && currentPlayer === 2) return;
+
+            switchTurn();
+        }
+
+        function switchTurn() {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            renderGame();
+
+            if (gameMode === 'ai' && currentPlayer === 2 && isGameActive) {
+                setTimeout(aiTurn, 700);
+            }
+        }
+
+        function aiTurn() {
+            if (!isGameActive) return;
+
+            let hand = player2OrAIHand;
+            let played = false;
+
+            if (boardTiles.length === 0) {
+                let tile = hand.splice(0, 1)[0];
+                boardTiles.push(tile);
+                leftEnd = tile.v1;
+                rightEnd = tile.v2;
+                played = true;
+            } else {
+                for (let i = 0; i < hand.length; i++) {
+                    let tile = hand[i];
+                    if (tile.v1 === leftEnd || tile.v2 === leftEnd) {
+                        hand.splice(i, 1);
+                        if (tile.v2 === leftEnd) {
+                            boardTiles.unshift({ v1: tile.v2, v2: tile.v1 });
+                            leftEnd = tile.v1;
+                        } else {
+                            boardTiles.unshift({ v1: tile.v1, v2: tile.v2 });
+                            leftEnd = tile.v2;
+                        }
+                        played = true;
+                        break;
+                    } else if (tile.v1 === rightEnd || tile.v2 === rightEnd) {
+                        hand.splice(i, 1);
+                        if (tile.v1 === rightEnd) {
+                            boardTiles.push({ v1: tile.v1, v2: tile.v2 });
+                            rightEnd = tile.v2;
+                        } else {
+                            boardTiles.push({ v1: tile.v2, v2: tile.v1 });
+                            rightEnd = tile.v1;
+                        }
+                        played = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!played && boneyard.length > 0) {
+                let drawn = boneyard.pop();
+                hand.push(drawn);
+                setTimeout(aiTurn, 500);
+                return;
+            }
+
+            currentPlayer = 1;
+            renderGame();
+        }
+
+        function endGame(resultText) {
+            isGameActive = false;
+            setTimeout(() => {
+                document.getElementById("final-result-text").innerText = resultText;
+                goToScreen("screen-gameover");
+            }, 300);
+        }
+    </script>
+</body>
+</html>

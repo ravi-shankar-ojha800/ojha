@@ -863,6 +863,10 @@
             }
             document.getElementById('final-score-text').innerText = `FINAL SCORE: ${Math.floor(score)}`;
             document.getElementById('gameover-modal').classList.remove('hidden');
+
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'OJHA_SCORE_SUBMIT', gameId: 'marioo', gameTitle: 'DARE TRAFFIC', score: Math.floor(score), level: 1, won: false }, '*');
+            }
         }
 
         function updatePhysics(delta) {

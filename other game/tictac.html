@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Widescreen Edition</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f0;
+            --card-bg: #ffffff;
+            --primary-black: #111111;
+            --accent-yellow: #ffde00;
+            --accent-yellow-hover: #f0d100;
+            --shadow: 8px 8px 0px #111111;
+            --shadow-sm: 4px 4px 0px #111111;
+            --transition: all 0.15s ease-in-out;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--primary-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .landscape-card {
+            background-color: var(--card-bg);
+            border: 4px solid var(--primary-black);
+            box-shadow: var(--shadow);
+            border-radius: 16px;
+            padding: 40px;
+            width: 92vw;
+            max-width: 1100px;
+            height: 85vh;
+            max-height: 680px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            border-bottom: 4px solid var(--primary-black);
+            padding-bottom: 12px;
+            text-align: center;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            position: relative;
+            height: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .screen-title {
+            font-size: 1.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .btn-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .action-btn {
+            background-color: var(--card-bg);
+            border: 3px solid var(--primary-black);
+            box-shadow: var(--shadow-sm);
+            border-radius: 12px;
+            padding: 22px;
+            font-size: 1.25rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background-color: var(--accent-yellow);
+            transform: translate(-3px, -3px);
+            box-shadow: 7px 7px 0px var(--primary-black);
+        }
+
+        .action-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        .action-btn.primary {
+            background-color: var(--accent-yellow);
+        }
+
+        .action-btn.primary:hover {
+            background-color: var(--accent-yellow-hover);
+        }
+
+        /* Top Right Menu Button for Game Screen */
+        .top-right-container {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .icon-btn {
+            background-color: var(--accent-yellow);
+            border: 3px solid var(--primary-black);
+            box-shadow: var(--shadow-sm);
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .icon-btn:hover {
+            background-color: var(--accent-yellow-hover);
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--primary-black);
+        }
+
+        /* Dropdown Modal inside Game Screen */
+        .menu-overlay {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background-color: var(--card-bg);
+            border: 3px solid var(--primary-black);
+            box-shadow: var(--shadow);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 220px;
+            z-index: 20;
+            transform: scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.1s ease-in-out;
+        }
+
+        .menu-overlay.open {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .menu-overlay button {
+            width: 100%;
+            padding: 12px;
+            font-weight: 900;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            border: 3px solid var(--primary-black);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .menu-overlay button:hover {
+            background-color: var(--accent-yellow);
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0px var(--primary-black);
+        }
+
+        /* Game Screen Widescreen Layout */
+        .game-layout {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            gap: 50px;
+            padding-top: 20px;
+        }
+
+        .game-info-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 25px;
+            max-width: 350px;
+        }
+
+        .status-box {
+            background-color: var(--accent-yellow);
+            border: 3px solid var(--primary-black);
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+
+        .board-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            width: 360px;
+            height: 360px;
+        }
+
+        .cell {
+            background-color: var(--card-bg);
+            border: 3px solid var(--primary-black);
+            border-radius: 12px;
+            font-size: 3.2rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            user-select: none;
+        }
+
+        .cell:hover:not(.taken) {
+            background-color: var(--accent-yellow);
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0px var(--primary-black);
+        }
+
+        .cell.taken {
+            cursor: not-allowed;
+            background-color: #fafafa;
+        }
+
+        .cell.x {
+            color: var(--primary-black);
+        }
+
+        .cell.o {
+            color: #d32f2f;
+        }
+
+        /* Post Game Screen */
+        .result-title {
+            font-size: 2.8rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-align: center;
+            background-color: var(--accent-yellow);
+            border: 3px solid var(--primary-black);
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            width: 100%;
+            max-width: 550px;
+            letter-spacing: -1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="landscape-card">
+        <h1>Tic-Tac-Toe</h1>
+
+        <div id="screen-mode" class="screen active">
+            <div class="screen-title">Select Game Mode</div>
+            <div class="btn-grid">
+                <button class="action-btn primary" onclick="selectMode('ai')">AI Mode</button>
+                <button class="action-btn" onclick="selectMode('pvp')">2 Player Mode</button>
+            </div>
+        </div>
+
+        <div id="screen-difficulty" class="screen">
+            <div class="screen-title">Select AI Difficulty</div>
+            <div class="btn-vertical">
+                <button class="action-btn" onclick="selectDifficulty('easy')">Easy</button>
+                <button class="action-btn" onclick="selectDifficulty('normal')">Normal</button>
+                <button class="action-btn primary" onclick="selectDifficulty('hard')">Hard (Unbeatable)</button>
+            </div>
+            <button class="action-btn" style="max-width: 200px; margin-top: 10px; padding: 12px; font-size: 1rem;" onclick="goToScreen('screen-mode')">Back</button>
+        </div>
+
+        <div id="screen-game" class="screen">
+            <div class="top-right-container">
+                <button class="icon-btn" onclick="toggleMenu()">Menu ⚙️</button>
+                <div class="menu-overlay" id="game-menu">
+                    <button onclick="resetGame(); toggleMenu();">Restart</button>
+                    <button onclick="goToScreen('screen-mode'); toggleMenu();">Main Menu</button>
+                    <button onclick="toggleMenu()" style="background-color: var(--primary-black); color: white;">Close</button>
+                </div>
+            </div>
+
+            <div class="game-layout">
+                <div class="game-info-panel">
+                    <div class="status-box" id="status">Player X's Turn</div>
+                </div>
+                <div class="board-container">
+                    <div class="board" id="board">
+                        <div class="cell" onclick="handleCellClick(0)"></div>
+                        <div class="cell" onclick="handleCellClick(1)"></div>
+                        <div class="cell" onclick="handleCellClick(2)"></div>
+                        <div class="cell" onclick="handleCellClick(3)"></div>
+                        <div class="cell" onclick="handleCellClick(4)"></div>
+                        <div class="cell" onclick="handleCellClick(5)"></div>
+                        <div class="cell" onclick="handleCellClick(6)"></div>
+                        <div class="cell" onclick="handleCellClick(7)"></div>
+                        <div class="cell" onclick="handleCellClick(8)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-gameover" class="screen">
+            <div class="result-title" id="final-result-text">Player X Wins!</div>
+            <div class="btn-vertical" style="max-width: 450px;">
+                <button class="action-btn primary" onclick="startRematch()">Play Again</button>
+                <button class="action-btn" onclick="goToScreen('screen-mode')">Main Menu</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let isGameActive = true;
+        let gameMode = "ai"; 
+        let difficulty = "normal"; 
+
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        const statusDisplay = document.getElementById("status");
+        const finalResultText = document.getElementById("final-result-text");
+
+        function goToScreen(screenId) {
+            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+            document.getElementById(screenId).classList.add("active");
+            // Ensure menu closes when switching screens
+            document.getElementById("game-menu").classList.remove("open");
+        }
+
+        function toggleMenu() {
+            document.getElementById("game-menu").classList.toggle("open");
+        }
+
+        function selectMode(mode) {
+            gameMode = mode;
+            if (mode === "ai") {
+                goToScreen("screen-difficulty");
+            } else {
+                startNewGame();
+            }
+        }
+
+        function selectDifficulty(selectedDiff) {
+            difficulty = selectedDiff;
+            startNewGame();
+        }
+
+        function startNewGame() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            isGameActive = true;
+            currentPlayer = "X";
+            statusDisplay.innerHTML = "Player X's Turn";
+
+            const cells = document.getElementById("board").children;
+            for (let cell of cells) {
+                cell.innerText = "";
+                cell.className = "cell";
+            }
+            goToScreen("screen-game");
+        }
+
+        function resetGame() {
+            startNewGame();
+        }
+
+        function startRematch() {
+            startNewGame();
+        }
+
+        function handleCellClick(index) {
+            if (board[index] !== "" || !isGameActive) return;
+            if (gameMode === "ai" && currentPlayer === "O") return;
+
+            makeMove(index, currentPlayer);
+
+            if (checkWin(board, currentPlayer)) {
+                endGame(currentPlayer);
+                return;
+            }
+
+            if (board.every(cell => cell !== "")) {
+                endGame("draw");
+                return;
+            }
+
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusDisplay.innerHTML = gameMode === "ai" && currentPlayer === "O" ? "AI is thinking..." : `Player ${currentPlayer}'s Turn`;
+
+            if (gameMode === "ai" && currentPlayer === "O" && isGameActive) {
+                setTimeout(makeAIMove, 400);
+            }
+        }
+
+        function makeMove(index, player) {
+            board[index] = player;
+            const cell = document.getElementById("board").children[index];
+            cell.innerText = player;
+            cell.classList.add("taken", player.toLowerCase());
+        }
+
+        function makeAIMove() {
+            if (!isGameActive) return;
+            let move;
+
+            if (difficulty === "easy") {
+                move = getRandomMove();
+            } else if (difficulty === "normal") {
+                move = Math.random() < 0.5 ? getBestMove() : getRandomMove();
+            } else {
+                move = getBestMove();
+            }
+
+            if (move !== undefined) {
+                makeMove(move, "O");
+
+                if (checkWin(board, "O")) {
+                    endGame("O");
+                    return;
+                }
+
+                if (board.every(cell => cell !== "")) {
+                    endGame("draw");
+                    return;
+                }
+
+                currentPlayer = "X";
+                statusDisplay.innerHTML = "Player X's Turn";
+            }
+        }
+
+        function getRandomMove() {
+            let emptyCells = board.map((val, idx) => val === "" ? idx : null).filter(val => val !== null);
+            if (emptyCells.length === 0) return;
+            return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        }
+
+        function getBestMove() {
+            let bestScore = -Infinity;
+            let bestMove;
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] === "") {
+                    board[i] = "O";
+                    let score = minimax(board, 0, false);
+                    board[i] = "";
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = i;
+                    }
+                }
+            }
+            return bestMove;
+        }
+
+        function minimax(currentBoard, depth, isMaximizing) {
+            if (checkWin(currentBoard, "O")) return 10 - depth;
+            if (checkWin(currentBoard, "X")) return depth - 10;
+            if (currentBoard.every(cell => cell !== "")) return 0;
+
+            if (isMaximizing) {
+                let maxScore = -Infinity;
+                for (let i = 0; i < currentBoard.length; i++) {
+                    if (currentBoard[i] === "") {
+                        currentBoard[i] = "O";
+                        let score = minimax(currentBoard, depth + 1, false);
+                        currentBoard[i] = "";
+                        maxScore = Math.max(score, maxScore);
+                    }
+                }
+                return maxScore;
+            } else {
+                let minScore = Infinity;
+                for (let i = 0; i < currentBoard.length; i++) {
+                    if (currentBoard[i] === "") {
+                        currentBoard[i] = "X";
+                        let score = minimax(currentBoard, depth + 1, true);
+                        currentBoard[i] = "";
+                        minScore = Math.min(score, minScore);
+                    }
+                }
+                return minScore;
+            }
+        }
+
+        function checkWin(currBoard, player) {
+            return winningConditions.some(condition => {
+                return condition.every(index => currBoard[index] === player);
+            });
+        }
+
+        function endGame(winner) {
+            isGameActive = false;
+            setTimeout(() => {
+                if (winner === "draw") {
+                    finalResultText.innerHTML = "It's a Draw!";
+                } else if (gameMode === "ai" && winner === "O") {
+                    finalResultText.innerHTML = "AI Wins!";
+                } else {
+                    finalResultText.innerHTML = `Player ${winner} Wins!`;
+                }
+                goToScreen("screen-gameover");
+            }, 500);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D Low-Poly Archery Master</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* UI OVERLAY CONTAINER */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+
+        /* RETICLE */
+        #reticle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 32px;
+            height: 32px;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: transform 0.1s ease, border-color 0.2s ease;
+            z-index: 5;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+        }
+
+        #reticle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            background-color: #ff3333;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #reticle.aiming {
+            transform: translate(-50%, -50%) scale(0.7);
+            border-color: #ffaa00;
+            box-shadow: 0 0 14px rgba(255, 170, 0, 0.8);
+        }
+
+        /* WOODEN PANEL STYLE ENHANCED */
+        .wood-panel {
+            background: linear-gradient(135deg, #2e1a0c 0%, #1c0e05 100%);
+            border: 3px solid #7c4822;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6), inset 0 2px 3px rgba(255,255,255,0.15), 0 0 12px rgba(124,72,34,0.3);
+            color: #f5e3cd;
+            padding: 16px;
+        }
+
+        /* MAIN MENU MODAL */
+        #main-menu {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            z-index: 20;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(-20px) !important;
+        }
+
+        .menu-title {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 12px;
+            color: #ffffff;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 8px rgba(255,188,99,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #523118;
+            border-radius: 8px;
+            background: #3d210f;
+            color: #cbb299;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn:hover {
+            background: #4e2b14;
+            color: #fff;
+            border-color: #8a5229;
+            box-shadow: 0 0 8px rgba(138,82,41,0.5);
+        }
+
+        .btn.active {
+            background: #e59329;
+            color: #241205;
+            border-color: #ffa834;
+            box-shadow: 0 0 12px rgba(229, 147, 41, 0.7);
+        }
+
+        .section-label {
+            font-size: 12px;
+            color: #9d8167;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-start {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #e59329 0%, #ba6f10 100%);
+            border: 2px solid #ffbc63;
+            color: #241205;
+            font-size: 16px;
+            font-weight: 800;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 10px rgba(255,188,99,0.3);
+            transition: transform 0.1s ease, filter 0.2s ease;
+        }
+
+        .btn-start:hover {
+            filter: brightness(1.15);
+        }
+
+        .btn-start:active {
+            transform: scale(0.98);
+        }
+
+        /* SETTINGS BUTTON TOP RIGHT */
+        #btn-settings-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 20;
+            font-size: 20px;
+        }
+
+        /* HUD ELEMENTS ENHANCED */
+        #hud-bottom-left {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            min-width: 180px;
+            border: 2px solid #7c4822;
+            background: linear-gradient(135deg, rgba(46,26,12,0.95) 0%, rgba(28,14,5,0.95) 100%);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(229,147,41,0.2);
+        }
+
+        #hud-bottom-right {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            padding: 10px 16px;
+            align-items: center;
+            border: 2px solid #7c4822;
+        }
+
+        .arrow-icon {
+            width: 12px;
+            height: 36px;
+            background-color: #f5e3cd;
+            clip-path: polygon(40% 0%, 60% 0%, 60% 70%, 100% 85%, 60% 80%, 60% 100%, 40% 100%, 40% 80%, 0% 85%, 40% 70%);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            filter: drop-shadow(0 0 2px #ffbc63);
+        }
+
+        .arrow-icon.used {
+            opacity: 0.2;
+            transform: scale(0.8);
+            filter: none;
+        }
+
+        /* STYLED CLOTH / WOOD TURN BANNER (Redesigned Modern Art) */
+        #turn-indicator {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.8);
+            padding: 12px 36px;
+            font-size: 22px;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 2px;
+            color: #fff8e7;
+            background: linear-gradient(135deg, #3d1c08 0%, #1a0a02 100%);
+            border: 3px solid #ffbc63;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,188,99,0.3), 0 0 20px rgba(255,188,99,0.4);
+            clip-path: polygon(6% 0%, 94% 0%, 100% 50%, 94% 100%, 6% 100%, 0% 50%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+            z-index: 25;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 8px rgba(255,255,255,0.6);
+        }
+
+        #turn-indicator.visible {
+            transform: translateX(-50%) scale(1) !important;
+            opacity: 1 !important;
+        }
+
+        /* NEW ADDITIVE: WIND INDICATOR HUD WIDGET NEAR TARGET AREA */
+        #wind-hud {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 18px;
+            background: rgba(20, 10, 5, 0.85);
+            border: 2px solid #528cbe;
+            border-radius: 20px;
+            color: #aae0ff;
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 12px rgba(82, 140, 190, 0.4), inset 0 0 8px rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 15;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        #wind-arrow-icon {
+            display: inline-block;
+            font-size: 16px;
+            transition: transform 0.4s ease;
+            color: #00d2ff;
+            text-shadow: 0 0 6px #00d2ff;
+        }
+
+        /* GAME OVER / ANNOUNCEMENT OVERLAY */
+        #announcement-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 30;
+            width: 320px;
+        }
+
+        .announce-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #ffbc63;
+            margin-bottom: 10px;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.8), 0 0 12px rgba(255,188,99,0.5);
+        }
+
+        .announce-score {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        /* ENHANCED SCORE POPUP AT IMPACT */
+        .score-popup {
+            position: absolute;
+            color: #ffe066;
+            font-size: 36px;
+            font-weight: 900;
+            text-shadow: 0 0 16px rgba(255, 200, 0, 0.9), 2px 2px 0 #000, -2px -2px 0 #000;
+            pointer-events: none;
+            animation: popupAnim 1.1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            z-index: 25;
+            letter-spacing: 1px;
+        }
+
+        @keyframes popupAnim {
+            0% { opacity: 0; transform: translate(-50%, 0) scale(0.3); }
+            25% { opacity: 1; transform: translate(-50%, -30px) scale(1.3); }
+            75% { opacity: 1; transform: translate(-50%, -50px) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -75px) scale(0.8); }
+        }
+    </style>
+    <!-- Include Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div id="reticle"></div>
+
+    <div id="ui-layer">
+        
+        <!-- HANDCRAFTED TURN INDICATOR BANNER -->
+        <div id="turn-indicator" class="hidden">YOUR TURN</div>
+
+        <!-- NEW ADDITIVE: WIND INDICATOR HUD -->
+        <div id="wind-hud" class="hidden">
+            <span>WIND</span>
+            <span id="wind-arrow-icon">➔</span>
+            <span id="wind-text-val" style="color: #ffffff;">NE 0.46</span>
+            <span id="wind-desc-val" style="font-size: 10px; color: #7cbbe8; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px;">MEDIUM</span>
+        </div>
+
+        <!-- SETTINGS TOGGLE BUTTON -->
+        <div id="btn-settings-toggle" class="wood-panel interactive">⚙️</div>
+
+        <!-- MAIN MENU / SETUP PANEL -->
+        <div id="main-menu" class="wood-panel interactive">
+            <div class="menu-title">
+                <span>🏹 Archery Game</span>
+            </div>
+            
+            <div class="section-label">Game Mode</div>
+            <div class="btn-group">
+                <div class="btn active" id="btn-mode-ai">
+                    <span>🤖</span>
+                    <span>AI Mode</span>
+                </div>
+                <div class="btn" id="btn-mode-2p">
+                    <span>👥</span>
+                    <span>Two Player</span>
+                </div>
+            </div>
+
+            <div id="ai-difficulty-container">
+                <div class="section-label">Difficulty (AI Mode)</div>
+                <div class="btn-group">
+                    <div class="btn active" id="btn-diff-easy">Easy</div>
+                    <div class="btn" id="btn-diff-medium">Medium</div>
+                    <div class="btn" id="btn-diff-hard">Hard</div>
+                </div>
+            </div>
+
+            <button class="btn-start" id="btn-start-game">Start Game</button>
+        </div>
+
+        <!-- HUD BOTTOM LEFT: TURN & SCORES -->
+        <div id="hud-bottom-left" class="wood-panel hidden">
+            <div id="hud-turn-name" style="font-size: 12px; color: #9d8167; font-weight: bold; letter-spacing: 0.5px;">YOUR TURN</div>
+            <div id="hud-score-main" style="font-size: 22px; font-weight: 800; color: #ffbc63; text-shadow: 0 0 6px rgba(255,188,99,0.4);">Score: 0</div>
+            <div id="hud-score-opp" style="font-size: 13px; color: #cbb299; margin-top: 4px;">Opponent: 0</div>
+        </div>
+
+        <!-- HUD BOTTOM RIGHT: ARROW COUNT -->
+        <div id="hud-bottom-right" class="wood-panel hidden">
+            <div class="arrow-icon" id="arrow-1"></div>
+            <div class="arrow-icon" id="arrow-2"></div>
+            <div class="arrow-icon" id="arrow-3"></div>
+        </div>
+
+        <!-- GAME OVER / ANNOUNCEMENT MODAL -->
+        <div id="announcement-overlay" class="wood-panel interactive hidden">
+            <div class="announce-title" id="announce-title">PLAYER 1 WINS!</div>
+            <div class="announce-score" id="announce-details">P1: 24 pts | P2: 18 pts</div>
+            <div class="btn-group">
+                <button class="btn-start" id="btn-play-again">Play Again</button>
+            </div>
+            <div style="margin-top: 8px;">
+                <button class="btn" id="btn-return-menu" style="width: 100%;">Main Menu</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    // =========================================================================
+    // 1. SOUND EFFECT GENERATOR (Web Audio API)
+    // =========================================================================
+    class SoundController {
+        constructor() {
+            this.ctx = null;
+        }
+
+        init() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        playDraw() {
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(110, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(260, this.ctx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.15, this.ctx.currentTime + 0.4);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.4);
+        }
+
+        playRelease() {
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(380, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(70, this.ctx.currentTime + 0.12);
+            gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.12);
+        }
+
+        playHit(score) {
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(190, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(35, this.ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.15);
+
+            if (score >= 8) {
+                setTimeout(() => {
+                    const chime = this.ctx.createOscillator();
+                    const chimeGain = this.ctx.createGain();
+                    chime.type = 'sine';
+                    chime.frequency.setValueAtTime(score === 10 ? 880 : 660, this.ctx.currentTime);
+                    chimeGain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    chimeGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+                    chime.connect(chimeGain);
+                    chimeGain.connect(this.ctx.destination);
+                    chime.start();
+                    chime.stop(this.ctx.currentTime + 0.4);
+                }, 50);
+            }
+        }
+
+        playClick() {
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.05);
+        }
+    }
+
+    const soundCtrl = new SoundController();
+
+    // =========================================================================
+    // 2. GAME STATE & CONSTANTS
+    // =========================================================================
+    const GAME_STATES = {
+        MENU: 'MENU',
+        PLAYER_TURN: 'PLAYER_TURN',
+        AIMING: 'AIMING',
+        ARROW_FLIGHT: 'ARROW_FLIGHT',
+        AI_THINKING: 'AI_THINKING',
+        ROUND_END: 'ROUND_END',
+        GAME_OVER: 'GAME_OVER'
+    };
+
+    const config = {
+        mode: 'AI',
+        difficulty: 'EASY',
+        maxArrows: 3
+    };
+
+    const gameState = {
+        currentState: GAME_STATES.MENU,
+        activePlayer: 1,
+        p1TotalScore: 0,
+        p2TotalScore: 0,
+        p1CurrentTurnScore: 0,
+        p2CurrentTurnScore: 0,
+        arrowsLeft: 3,
+        stuckArrows: []
+    };
+
+    // NEW ADDITIVE: WIND STATE OBJECT
+    const windState = {
+        strength: 0, // 0.00 to 1.00
+        directionName: 'N',
+        vector: new THREE.Vector3(0, 0, 0),
+        angleDeg: 0,
+        desc: 'CALM'
+    };
+
+    // =========================================================================
+    // 3. THREE.JS SCENE SETUP & ENHANCED LOW-POLY WORLD
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x6eb5f0);
+    scene.fog = new THREE.FogExp2(0x6eb5f0, 0.01);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    container.appendChild(renderer.domElement);
+
+    // LIGHTING ENHANCEMENTS
+    const ambientLight = new THREE.AmbientLight(0xfff3e0, 0.75);
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfffae6, 1.0);
+    sunLight.position.set(25, 42, 20);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 100;
+    const d = 25;
+    sunLight.shadow.camera.left = -d;
+    sunLight.shadow.camera.right = d;
+    sunLight.shadow.camera.top = d;
+    sunLight.shadow.camera.bottom = -d;
+    sunLight.shadow.bias = -0.0005;
+    scene.add(sunLight);
+
+    // ENHANCED MATERIAL PALETTE
+    const materials = {
+        grassBase: new THREE.MeshLambertMaterial({ color: 0x6bb82d, flatShading: true }),
+        grassDark: new THREE.MeshLambertMaterial({ color: 0x519920, flatShading: true }),
+        grassLight: new THREE.MeshLambertMaterial({ color: 0x85d638, flatShading: true }),
+        grassOlive: new THREE.MeshLambertMaterial({ color: 0x7da832, flatShading: true }),
+        dirt: new THREE.MeshStandardMaterial({ color: 0x70431f, roughness: 0.9, flatShading: true }),
+        woodDark: new THREE.MeshStandardMaterial({ color: 0x3d210f, roughness: 0.75, flatShading: true }),
+        woodLight: new THREE.MeshStandardMaterial({ color: 0x8a5229, roughness: 0.65, flatShading: true }),
+        woodWarm: new THREE.MeshStandardMaterial({ color: 0xa36232, roughness: 0.6, flatShading: true }),
+        bark: new THREE.MeshStandardMaterial({ color: 0x4d3019, roughness: 0.85, flatShading: true }),
+        foliageDark: new THREE.MeshLambertMaterial({ color: 0x245922, flatShading: true }),
+        foliageMed: new THREE.MeshLambertMaterial({ color: 0x3b8537, flatShading: true }),
+        foliageLight: new THREE.MeshLambertMaterial({ color: 0x5cb33b, flatShading: true }),
+        foliageYellow: new THREE.MeshLambertMaterial({ color: 0x82c433, flatShading: true }),
+        tentFabric: new THREE.MeshStandardMaterial({ color: 0xf5ebd3, roughness: 0.6, flatShading: true }),
+        tentRed: new THREE.MeshStandardMaterial({ color: 0xba3225, roughness: 0.6, flatShading: true }),
+        rockGray: new THREE.MeshStandardMaterial({ color: 0x7c8385, roughness: 0.8, flatShading: true }),
+        rockWarm: new THREE.MeshStandardMaterial({ color: 0x948b83, roughness: 0.8, flatShading: true }),
+        water: new THREE.MeshStandardMaterial({ color: 0x3b9ee3, roughness: 0.1, metalness: 0.15, transparent: true, opacity: 0.88, flatShading: true }),
+        targetRed: new THREE.MeshStandardMaterial({ color: 0xd62818, roughness: 0.45, flatShading: true }),
+        targetWhite: new THREE.MeshStandardMaterial({ color: 0xf7f4ec, roughness: 0.45, flatShading: true }),
+        targetCenter: new THREE.MeshStandardMaterial({ color: 0xb51204, roughness: 0.4, flatShading: true }),
+        feather: new THREE.MeshLambertMaterial({ color: 0xf5f5f5, flatShading: true }),
+        metal: new THREE.MeshStandardMaterial({ color: 0x383b3e, metalness: 0.8, roughness: 0.3, flatShading: true }),
+        fire: new THREE.MeshBasicMaterial({ color: 0xff6600 }),
+        cloud: new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.92, flatShading: true }),
+        mushroomCap: new THREE.MeshLambertMaterial({ color: 0xcc3322, flatShading: true }),
+        mushroomStem: new THREE.MeshLambertMaterial({ color: 0xddddcc, flatShading: true }),
+        // ADDITIVE MATERIALS FOR NEW FEATURES
+        birdMat: new THREE.MeshLambertMaterial({ color: 0x222222, flatShading: true }),
+        rabbitMat: new THREE.MeshStandardMaterial({ color: 0xe8ded1, roughness: 0.7, flatShading: true }),
+        rabbitInner: new THREE.MeshBasicMaterial({ color: 0xffb3b3 }),
+        boardGlow: new THREE.MeshBasicMaterial({ color: 0xffbc63, transparent: true, opacity: 0.15 }),
+        impactSpark: new THREE.MeshBasicMaterial({ color: 0xffebaa })
+    };
+
+    // ENVIRONMENT CONTAINER
+    const worldGroup = new THREE.Group();
+    scene.add(worldGroup);
+
+    // 1. TERRAIN PLATFORM WITH RICH NATURAL COLOR VARIATION
+    function createTerrain() {
+        const platformGroup = new THREE.Group();
+
+        const baseGeo = new THREE.BoxGeometry(26, 3, 38);
+        const baseMesh = new THREE.Mesh(baseGeo, materials.dirt);
+        baseMesh.position.set(0, -1.5, -6);
+        baseMesh.receiveShadow = true;
+        platformGroup.add(baseMesh);
+
+        // Grid Terrain Tiles with multi-tone variation
+        const tileSize = 2;
+        const grassOptions = [materials.grassBase, materials.grassLight, materials.grassDark, materials.grassOlive];
+        for (let x = -13; x < 13; x += tileSize) {
+            for (let z = -25; z < 13; z += tileSize) {
+                const height = 0.2 + (Math.random() * 0.08);
+                const tileGeo = new THREE.BoxGeometry(tileSize - 0.05, height, tileSize - 0.05);
+                
+                const mat = grassOptions[Math.floor(Math.random() * grassOptions.length)];
+                const tile = new THREE.Mesh(tileGeo, mat);
+                tile.position.set(x + tileSize / 2, height / 2, z + tileSize / 2);
+                tile.receiveShadow = true;
+                tile.castShadow = true;
+                platformGroup.add(tile);
+            }
+        }
+        worldGroup.add(platformGroup);
+    }
+
+    // 2. TARGET & MAIN TREE SYSTEM
+    let targetMeshGroup = new THREE.Group();
+    let targetCenterWorldPos = new THREE.Vector3();
+    let boardLightGlowRing = null; // ADDITIVE: Subtle highlight ring
+
+    function createMainTreeAndTarget() {
+        const treeGroup = new THREE.Group();
+        treeGroup.position.set(3.5, 0, -18);
+
+        // Richer Low-Poly Trunk
+        const trunkGeo = new THREE.CylinderGeometry(0.95, 1.45, 8, 8);
+        const trunk = new THREE.Mesh(trunkGeo, materials.bark);
+        trunk.position.y = 4;
+        trunk.castShadow = true;
+        trunk.receiveShadow = true;
+        treeGroup.add(trunk);
+
+        // Canopy
+        const canopyGroup = new THREE.Group();
+        const leafMats = [materials.foliageDark, materials.foliageMed, materials.foliageLight, materials.foliageYellow];
+        
+        const clusterPositions = [
+            [0, 8, 0, 3.3],
+            [-1.8, 7.5, 0.5, 2.5],
+            [1.7, 7.8, -0.5, 2.6],
+            [0, 9.6, 0, 2.4],
+            [-0.8, 8.8, -1.2, 2.1],
+            [1.0, 8.5, 1.2, 2.3]
+        ];
+
+        clusterPositions.forEach((pos, idx) => {
+            const icoGeo = new THREE.IcosahedronGeometry(pos[3], 1);
+            const foliage = new THREE.Mesh(icoGeo, leafMats[idx % leafMats.length]);
+            foliage.position.set(pos[0], pos[1], pos[2]);
+            foliage.rotation.set(Math.random(), Math.random(), Math.random());
+            foliage.castShadow = true;
+            canopyGroup.add(foliage);
+        });
+        treeGroup.add(canopyGroup);
+
+        // TARGET BOARD
+        targetMeshGroup = new THREE.Group();
+        targetMeshGroup.position.set(3.5, 3.8, -16.8);
+
+        const backerGeo = new THREE.CylinderGeometry(2.15, 2.15, 0.3, 16);
+        backerGeo.rotateX(Math.PI / 2);
+        const backer = new THREE.Mesh(backerGeo, materials.woodDark);
+        backer.castShadow = true;
+        targetMeshGroup.add(backer);
+
+        const ringsConfig = [
+            { radius: 2.0, mat: materials.targetRed },
+            { radius: 1.6, mat: materials.targetWhite },
+            { radius: 1.2, mat: materials.targetRed },
+            { radius: 0.8, mat: materials.targetWhite },
+            { radius: 0.4, mat: materials.targetCenter }
+        ];
+
+        ringsConfig.forEach((r, i) => {
+            const ringGeo = new THREE.CylinderGeometry(r.radius, r.radius, 0.32 - i*0.01, 16);
+            ringGeo.rotateX(Math.PI / 2);
+            const ringMesh = new THREE.Mesh(ringGeo, r.mat);
+            ringMesh.position.z = 0.02 * i;
+            targetMeshGroup.add(ringMesh);
+        });
+
+        // ADDITIVE ENHANCEMENT: Subtle Light Pulse / Shine Ring around existing board
+        const glowRingGeo = new THREE.RingGeometry(2.1, 2.25, 32);
+        boardLightGlowRing = new THREE.Mesh(glowRingGeo, materials.boardGlow);
+        boardLightGlowRing.position.z = 0.18;
+        targetMeshGroup.add(boardLightGlowRing);
+
+        worldGroup.add(treeGroup);
+        worldGroup.add(targetMeshGroup);
+
+        targetMeshGroup.getWorldPosition(targetCenterWorldPos);
+    }
+
+    // 3. LOW-POLY CLOUDS & ATMOSPHERE (ENHANCED QUANTITY & VARIETY)
+    const cloudsArray = [];
+    function createLowPolyClouds() {
+        const cloudGroup = new THREE.Group();
+        
+        // Increased cloud count strictly additive
+        for (let c = 0; c < 12; c++) {
+            const singleCloud = new THREE.Group();
+            const numBlobs = 3 + Math.floor(Math.random() * 4);
+            
+            for (let b = 0; b < numBlobs; b++) {
+                const blobGeo = new THREE.DodecahedronGeometry(1.2 + Math.random() * 0.9, 1);
+                const blob = new THREE.Mesh(blobGeo, materials.cloud);
+                blob.position.set(b * 1.3, Math.random() * 0.5, Math.random() * 0.6);
+                singleCloud.add(blob);
+            }
+
+            const posX = (Math.random() - 0.5) * 55;
+            const posY = 16 + Math.random() * 10;
+            const posZ = -5 - Math.random() * 30;
+
+            singleCloud.position.set(posX, posY, posZ);
+            cloudGroup.add(singleCloud);
+
+            cloudsArray.push({
+                mesh: singleCloud,
+                speed: 0.15 + Math.random() * 0.2
+            });
+        }
+        scene.add(cloudGroup);
+    }
+
+    // 4. CAMPSITE, PROPS & MICRO-DETAILS
+    function createEnvironmentProps() {
+        const treePositions = [
+            [-8, -12, 'pine'], [-11, -8, 'pine'], [-9, -4, 'round'], [-12, -18, 'pine'],
+            [-5, -22, 'round'], [0, -24, 'pine'], [7, -22, 'round'], [11, -15, 'pine'],
+            [9, -8, 'round'], [-10, 4, 'round']
+        ];
+
+        treePositions.forEach(p => {
+            const group = new THREE.Group();
+            group.position.set(p[0], 0, p[1]);
+
+            if (p[2] === 'pine') {
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 3, 5), materials.bark);
+                trunk.position.y = 1.5;
+                group.add(trunk);
+
+                for (let i = 0; i < 3; i++) {
+                    const cone = new THREE.Mesh(new THREE.ConeGeometry(2.2 - i*0.5, 2.5, 6), materials.foliageDark);
+                    cone.position.y = 2.8 + i * 1.4;
+                    cone.castShadow = true;
+                    group.add(cone);
+                }
+            } else {
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 3.5, 6), materials.bark);
+                trunk.position.y = 1.75;
+                group.add(trunk);
+
+                const canopy = new THREE.Mesh(new THREE.DodecahedronGeometry(2), materials.foliageMed);
+                canopy.position.y = 4.2;
+                canopy.castShadow = true;
+                group.add(canopy);
+            }
+            worldGroup.add(group);
+        });
+
+        // CAMPING TENT
+        const tentGroup = new THREE.Group();
+        tentGroup.position.set(-6, 0, -10);
+        tentGroup.rotation.y = Math.PI * 0.15;
+
+        const tentGeo = new THREE.BufferGeometry();
+        const vertices = new Float32Array([
+            -1.8,0,2,  1.8,0,2,  0,2.4,2,
+            -1.8,0,-2, 0,2.4,-2, 1.8,0,-2,
+            -1.8,0,2,  0,2.4,2,  -1.8,0,-2,
+            -1.8,0,-2, 0,2.4,2,  0,2.4,-2,
+            1.8,0,2,   0,2.4,-2,  0,2.4,2,
+            1.8,0,2,   1.8,0,-2,  0,2.4,-2
+        ]);
+        tentGeo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        tentGeo.computeVertexNormals();
+        const tentMesh = new THREE.Mesh(tentGeo, materials.tentFabric);
+        tentMesh.castShadow = true;
+        tentGroup.add(tentMesh);
+
+        const decGeo = new THREE.BoxGeometry(3.6, 0.3, 4.02);
+        const decMesh = new THREE.Mesh(decGeo, materials.tentRed);
+        decMesh.position.y = 0.3;
+        tentGroup.add(decMesh);
+        worldGroup.add(tentGroup);
+
+        // FENCE
+        const fenceGroup = new THREE.Group();
+        fenceGroup.position.set(-2, 0, -14);
+        for (let i = 0; i < 4; i++) {
+            const post = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.6, 0.25), materials.woodDark);
+            post.position.set(i * 1.8, 0.8, 0);
+            post.castShadow = true;
+            fenceGroup.add(post);
+            if (i < 3) {
+                const rail1 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.15, 0.1), materials.woodWarm);
+                rail1.position.set(i * 1.8 + 0.9, 1.1, 0);
+                const rail2 = rail1.clone();
+                rail2.position.y = 0.5;
+                fenceGroup.add(rail1);
+                fenceGroup.add(rail2);
+            }
+        }
+        worldGroup.add(fenceGroup);
+
+        // BARRELS
+        const createBarrel = (x, z, rY = 0, mat = materials.woodDark) => {
+            const b = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 1.6, 9), mat);
+            b.position.set(x, 0.8, z);
+            b.rotation.y = rY;
+            b.castShadow = true;
+            worldGroup.add(b);
+        };
+        createBarrel(-1, -12, 0, materials.woodDark);
+        createBarrel(-0.2, -13.2, 0.4, materials.woodWarm);
+        createBarrel(-0.9, -12.8, 1.1, materials.woodLight);
+
+        // CAMPFIRE
+        const fireGroup = new THREE.Group();
+        fireGroup.position.set(-3.5, 0, -7);
+        for (let a = 0; a < Math.PI * 2; a += 0.8) {
+            const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(0.25), materials.rockGray);
+            stone.position.set(Math.cos(a)*0.8, 0.15, Math.sin(a)*0.8);
+            fireGroup.add(stone);
+        }
+        for (let i = 0; i < 3; i++) {
+            const log = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1), materials.bark);
+            log.rotation.z = Math.PI / 3;
+            log.rotation.y = (i * Math.PI) / 1.5;
+            log.position.y = 0.15;
+            fireGroup.add(log);
+        }
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.8, 5), materials.fire);
+        flame.position.y = 0.5;
+        fireGroup.add(flame);
+        worldGroup.add(fireGroup);
+
+        // STREAM & BRIDGE
+        const streamGeo = new THREE.PlaneGeometry(3.5, 20);
+        streamGeo.rotateX(-Math.PI / 2);
+        const stream = new THREE.Mesh(streamGeo, materials.water);
+        stream.position.set(7, 0.05, -8);
+        stream.rotation.y = -0.2;
+        worldGroup.add(stream);
+
+        const bridgeGroup = new THREE.Group();
+        bridgeGroup.position.set(6.2, 0.25, -6);
+        bridgeGroup.rotation.y = -0.2;
+        for (let p = -1.8; p <= 1.8; p += 0.45) {
+            const plankMat = (Math.random() > 0.5) ? materials.woodLight : materials.woodWarm;
+            const plank = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.12, 2.2), plankMat);
+            plank.position.set(p, 0, 0);
+            plank.castShadow = true;
+            bridgeGroup.add(plank);
+        }
+        worldGroup.add(bridgeGroup);
+
+        // MUSHROOMS & ROCKS
+        for (let r = 0; r < 25; r++) {
+            const rx = (Math.random() - 0.5) * 22;
+            const rz = (Math.random() - 0.5) * 30 - 5;
+            if (Math.abs(rx - 3.5) < 2 && Math.abs(rz + 16.8) < 2) continue;
+
+            const rockMat = (Math.random() > 0.5) ? materials.rockGray : materials.rockWarm;
+            const rock = new THREE.Mesh(
+                new THREE.DodecahedronGeometry(0.3 + Math.random()*0.5),
+                rockMat
+            );
+            rock.position.set(rx, 0.2, rz);
+            rock.rotation.set(Math.random(), Math.random(), Math.random());
+            rock.castShadow = true;
+            worldGroup.add(rock);
+
+            if (r % 4 === 0) {
+                const shroomGroup = new THREE.Group();
+                const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.2, 5), materials.mushroomStem);
+                const cap = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.1, 6), materials.mushroomCap);
+                cap.position.y = 0.12;
+                shroomGroup.add(stem);
+                shroomGroup.add(cap);
+                shroomGroup.position.set(rx + 0.4, 0.1, rz + 0.3);
+                worldGroup.add(shroomGroup);
+            }
+        }
+    }
+
+    // Initialize Base World
+    createTerrain();
+    createMainTreeAndTarget();
+    createLowPolyClouds();
+    createEnvironmentProps();
+
+    // =========================================================================
+    // NEW ADDITIVE FEATURE A: LOW-POLY BIRDS SYSTEM
+    // =========================================================================
+    const birdsArray = [];
+    function createBirdsSystem() {
+        const numBirds = 6;
+        for (let i = 0; i < numBirds; i++) {
+            const birdGroup = new THREE.Group();
+            
+            // Low poly bird body
+            const body = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4, 4), materials.birdMat);
+            body.rotation.x = Math.PI / 2;
+            birdGroup.add(body);
+
+            // Left & Right Wings
+            const wingGeo = new THREE.BoxGeometry(0.4, 0.02, 0.15);
+            wingGeo.translate(-0.2, 0, 0);
+            const leftWing = new THREE.Mesh(wingGeo, materials.birdMat);
+            leftWing.position.set(0, 0, 0);
+
+            const rightWing = leftWing.clone();
+            rightWing.scale.x = -1;
+
+            birdGroup.add(leftWing);
+            birdGroup.add(rightWing);
+
+            birdGroup.userData = {
+                leftWing: leftWing,
+                rightWing: rightWing,
+                speed: 3 + Math.random() * 4,
+                wingSpeed: 10 + Math.random() * 8,
+                isPerched: (i === 0), // 1 bird sitting on tree branch
+                perchPos: new THREE.Vector3(4.2, 7.2, -17.5),
+                targetPos: new THREE.Vector3(),
+                radius: 12 + Math.random() * 10,
+                angle: Math.random() * Math.PI * 2,
+                centerY: 12 + Math.random() * 8
+            };
+
+            if (birdGroup.userData.isPerched) {
+                birdGroup.position.copy(birdGroup.userData.perchPos);
+            } else {
+                birdGroup.position.set(
+                    Math.cos(birdGroup.userData.angle) * birdGroup.userData.radius,
+                    birdGroup.userData.centerY,
+                    Math.sin(birdGroup.userData.angle) * birdGroup.userData.radius - 8
+                );
+            }
+
+            scene.add(birdGroup);
+            birdsArray.push(birdGroup);
+        }
+    }
+
+    function updateBirds(dt, time) {
+        birdsArray.forEach((bird) => {
+            const data = bird.userData;
+
+            if (data.isPerched) {
+                // Occasional subtle turn or wing flutter
+                bird.rotation.y = Math.sin(time * 0.5) * 0.4;
+                if (Math.sin(time * 3) > 0.95) {
+                    data.leftWing.rotation.z = Math.sin(time * 20) * 0.3;
+                    data.rightWing.rotation.z = -Math.sin(time * 20) * 0.3;
+                }
+                return;
+            }
+
+            // Wing flap animation
+            const wingAngle = Math.sin(time * data.wingSpeed) * 0.6;
+            data.leftWing.rotation.z = wingAngle;
+            data.rightWing.rotation.z = -wingAngle;
+
+            // Circular flight trajectory with dynamic height variation
+            data.angle += (data.speed / data.radius) * dt;
+            const nextX = Math.cos(data.angle) * data.radius;
+            const nextZ = Math.sin(data.angle) * data.radius - 8;
+            const nextY = data.centerY + Math.sin(data.angle * 2) * 1.5;
+
+            const targetPos = new THREE.Vector3(nextX, nextY, nextZ);
+            bird.lookAt(targetPos);
+            bird.position.copy(targetPos);
+        });
+    }
+
+    createBirdsSystem();
+
+    // =========================================================================
+    // NEW ADDITIVE FEATURE B: LOW-POLY AMBIENT RABBIT
+    // =========================================================================
+    let rabbitGroup = null;
+    function createRabbit() {
+        rabbitGroup = new THREE.Group();
+
+        // Body
+        const body = new THREE.Mesh(new THREE.DodecahedronGeometry(0.35, 1), materials.rabbitMat);
+        body.scale.set(1, 0.9, 1.3);
+        body.position.y = 0.3;
+        body.castShadow = true;
+        rabbitGroup.add(body);
+
+        // Head
+        const head = new THREE.Mesh(new THREE.DodecahedronGeometry(0.2, 1), materials.rabbitMat);
+        head.position.set(0, 0.48, -0.3);
+        head.castShadow = true;
+        rabbitGroup.add(head);
+
+        // Ears
+        const earGeo = new THREE.BoxGeometry(0.06, 0.3, 0.04);
+        const leftEar = new THREE.Mesh(earGeo, materials.rabbitMat);
+        leftEar.position.set(0.08, 0.72, -0.28);
+        leftEar.rotation.z = -0.15;
+        leftEar.rotation.x = -0.1;
+        rabbitGroup.add(leftEar);
+
+        const rightEar = leftEar.clone();
+        rightEar.position.x = -0.08;
+        rightEar.rotation.z = 0.15;
+        rabbitGroup.add(rightEar);
+
+        // Inner ears
+        const innerEarGeo = new THREE.BoxGeometry(0.03, 0.2, 0.01);
+        const leftInner = new THREE.Mesh(innerEarGeo, materials.rabbitInner);
+        leftInner.position.set(0.08, 0.72, -0.3);
+        rabbitGroup.add(leftInner);
+
+        const rightInner = leftInner.clone();
+        rightInner.position.x = -0.08;
+        rabbitGroup.add(rightInner);
+
+        // Tail
+        const tail = new THREE.Mesh(new THREE.DodecahedronGeometry(0.1, 1), materials.rabbitMat);
+        tail.position.set(0, 0.32, 0.42);
+        rabbitGroup.add(tail);
+
+        rabbitGroup.position.set(-3.5, 0, -4);
+        worldGroup.add(rabbitGroup);
+
+        rabbitGroup.userData = {
+            state: 'IDLE', // IDLE, HOPPING
+            timer: 0,
+            targetPos: new THREE.Vector3(-3.5, 0, -4),
+            startPos: new THREE.Vector3(-3.5, 0, -4),
+            hopProgress: 0
+        };
+    }
+
+    function updateRabbit(dt) {
+        if (!rabbitGroup) return;
+        const data = rabbitGroup.userData;
+        data.timer -= dt;
+
+        if (data.timer <= 0) {
+            if (data.state === 'IDLE') {
+                data.state = 'HOPPING';
+                data.timer = 1.2 + Math.random() * 0.8;
+                data.hopProgress = 0;
+                data.startPos.copy(rabbitGroup.position);
+                
+                // Random hop location in quiet meadow area
+                const rx = -5 + (Math.random() - 0.5) * 4;
+                const rz = -5 + (Math.random() - 0.5) * 4;
+                data.targetPos.set(rx, 0, rz);
+                rabbitGroup.lookAt(data.targetPos.x, rabbitGroup.position.y, data.targetPos.z);
+            } else {
+                data.state = 'IDLE';
+                data.timer = 2 + Math.random() * 4;
+            }
+        }
+
+        if (data.state === 'HOPPING') {
+            data.hopProgress += dt * 2.2;
+            const t = Math.min(1, data.hopProgress);
+            rabbitGroup.position.lerpVectors(data.startPos, data.targetPos, t);
+            rabbitGroup.position.y = Math.sin(t * Math.PI) * 0.35; // Parabolic hop arc
+        } else {
+            rabbitGroup.position.y = 0;
+            // Subtle idle sniffing head-bob
+            rabbitGroup.rotation.y += Math.sin(Date.now() * 0.003) * 0.005;
+        }
+    }
+
+    createRabbit();
+
+    // =========================================================================
+    // NEW ADDITIVE FEATURE C: DYNAMIC WIND SYSTEM & RANDOMIZER
+    // =========================================================================
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+
+    function randomizeWind() {
+        const str = Math.random();
+        windState.strength = parseFloat(str.toFixed(2));
+        
+        const dirIdx = Math.floor(Math.random() * directions.length);
+        windState.directionName = directions[dirIdx];
+        windState.angleDeg = dirIdx * 45;
+
+        const rad = (windState.angleDeg * Math.PI) / 180;
+        // X = sideways drift, Y = vertical drift
+        windState.vector.set(Math.sin(rad) * windState.strength * 3.5, Math.cos(rad) * windState.strength * 1.8, 0);
+
+        if (windState.strength < 0.25) windState.desc = 'CALM';
+        else if (windState.strength < 0.55) windState.desc = 'LIGHT';
+        else if (windState.strength < 0.80) windState.desc = 'MEDIUM';
+        else windState.desc = 'STRONG';
+
+        updateWindUI();
+    }
+
+    function updateWindUI() {
+        const windHud = document.getElementById('wind-hud');
+        if (gameState.currentState === GAME_STATES.PLAYER_TURN || gameState.currentState === GAME_STATES.AIMING) {
+            windHud.classList.remove('hidden');
+        } else {
+            windHud.classList.add('hidden');
+        }
+
+        document.getElementById('wind-text-val').innerText = `${windState.directionName} ${windState.strength.toFixed(2)}`;
+        document.getElementById('wind-desc-val').innerText = windState.desc;
+        document.getElementById('wind-arrow-icon').style.transform = `rotate(${windState.angleDeg}deg)`;
+    }
+
+    randomizeWind();
+
+    // =========================================================================
+    // 4. FIRST-PERSON BOW & ARROW RIG
+    // =========================================================================
+    const cameraRig = new THREE.Group();
+    cameraRig.position.set(0, 2.2, 8);
+    scene.add(cameraRig);
+    cameraRig.add(camera);
+    camera.position.set(0, 0, 0);
+
+    const bowGroup = new THREE.Group();
+    camera.add(bowGroup);
+    bowGroup.position.set(0.65, -0.5, -1.2);
+    bowGroup.rotation.y = -Math.PI * 0.1;
+
+    function buildBowMesh() {
+        const bowContainer = new THREE.Group();
+        const curvePoints = [];
+        const segments = 10;
+        for (let i = 0; i <= segments; i++) {
+            const t = (i / segments) - 0.5;
+            const x = Math.sin(t * Math.PI) * 0.35;
+            const y = t * 2.6;
+            const z = -Math.cos(t * Math.PI) * 0.2 + 0.2;
+            curvePoints.push(new THREE.Vector3(x, y, z));
+        }
+
+        const curve = new THREE.CatmullRomCurve3(curvePoints);
+        const bowGeo = new THREE.TubeGeometry(curve, 12, 0.05, 6, false);
+        const bowMesh = new THREE.Mesh(bowGeo, materials.woodDark);
+        bowMesh.castShadow = true;
+        bowContainer.add(bowMesh);
+
+        const stringGeo = new THREE.BufferGeometry();
+        const stringPositions = new Float32Array([
+            curvePoints[0].x, curvePoints[0].y, curvePoints[0].z,
+            0, 0, 0.1,
+            curvePoints[segments].x, curvePoints[segments].y, curvePoints[segments].z
+        ]);
+        stringGeo.setAttribute('position', new THREE.BufferAttribute(stringPositions, 3));
+        const stringMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+        const stringLine = new THREE.Line(stringGeo, stringMat);
+        bowContainer.add(stringLine);
+        bowContainer.userData.stringGeo = stringGeo;
+
+        return bowContainer;
+    }
+
+    const bowMesh = buildBowMesh();
+    bowGroup.add(bowMesh);
+
+    function createArrowMesh() {
+        const arrowGroup = new THREE.Group();
+        const shaftGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.8, 6);
+        shaftGeo.rotateX(Math.PI / 2);
+        const shaft = new THREE.Mesh(shaftGeo, materials.woodWarm);
+        shaft.castShadow = true;
+        arrowGroup.add(shaft);
+
+        const tipGeo = new THREE.ConeGeometry(0.06, 0.25, 5);
+        tipGeo.rotateX(Math.PI / 2);
+        const tip = new THREE.Mesh(tipGeo, materials.metal);
+        tip.position.z = -0.95;
+        arrowGroup.add(tip);
+
+        for (let f = 0; f < 3; f++) {
+            const feather = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.12, 0.3), materials.feather);
+            feather.position.z = 0.75;
+            feather.rotation.z = (f * Math.PI * 2) / 3;
+            arrowGroup.add(feather);
+        }
+
+        return arrowGroup;
+    }
+
+    const readyArrow = createArrowMesh();
+    readyArrow.position.set(-0.05, 0, 0.2);
+    bowGroup.add(readyArrow);
+
+    const activeArrows = [];
+
+    // =========================================================================
+    // 5. CAMERA AIMING & INPUT SYSTEM
+    // =========================================================================
+    let targetRotationX = 0, targetRotationY = 0;
+    let isAiming = false;
+    let drawPower = 0;
+
+    const cameraLimits = {
+        minY: -Math.PI * 0.25,
+        maxY: Math.PI * 0.25,
+        minX: -Math.PI * 0.15,
+        maxX: Math.PI * 0.15
+    };
+
+    function updateCameraRotation() {
+        if (gameState.currentState === GAME_STATES.PLAYER_TURN || gameState.currentState === GAME_STATES.AIMING) {
+            camera.rotation.y += (targetRotationY - camera.rotation.y) * 0.1;
+            camera.rotation.x += (targetRotationX - camera.rotation.x) * 0.1;
+        }
+    }
+
+    function onPointerMove(e) {
+        if (gameState.currentState !== GAME_STATES.PLAYER_TURN && gameState.currentState !== GAME_STATES.AIMING) return;
+
+        const x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+        const y = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+
+        const deltaX = (x - window.innerWidth / 2) / (window.innerWidth / 2);
+        const deltaY = (y - window.innerHeight / 2) / (window.innerHeight / 2);
+
+        targetRotationY = -deltaX * 0.6;
+        targetRotationX = -deltaY * 0.35;
+
+        targetRotationY = Math.max(cameraLimits.minY, Math.min(cameraLimits.maxY, targetRotationY));
+        targetRotationX = Math.max(cameraLimits.minX, Math.min(cameraLimits.maxX, targetRotationX));
+    }
+
+    function onPointerDown(e) {
+        if (e.target.closest('.interactive')) return;
+        soundCtrl.init();
+
+        if (gameState.currentState === GAME_STATES.PLAYER_TURN && gameState.arrowsLeft > 0) {
+            gameState.currentState = GAME_STATES.AIMING;
+            isAiming = true;
+            drawPower = 0;
+            document.getElementById('reticle').classList.add('aiming');
+            soundCtrl.playDraw();
+            updateWindUI();
+        }
+    }
+
+    function onPointerUp() {
+        if (gameState.currentState === GAME_STATES.AIMING && isAiming) {
+            shootArrow();
+        }
+    }
+
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('touchmove', onPointerMove);
+    window.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('touchstart', onPointerDown);
+    window.addEventListener('mouseup', onPointerUp);
+    window.addEventListener('touchend', onPointerUp);
+
+    // =========================================================================
+    // 6. ELASTIC BOW DRAW & PROJECTILE MOMENTUM WITH WIND PHYSICS INTEGRATION
+    // =========================================================================
+    function shootArrow() {
+        isAiming = false;
+        gameState.currentState = GAME_STATES.ARROW_FLIGHT;
+        document.getElementById('reticle').classList.remove('aiming');
+        updateWindUI();
+
+        soundCtrl.playRelease();
+        readyArrow.visible = false;
+        resetBowString();
+
+        const flightArrow = createArrowMesh();
+        const spawnPos = new THREE.Vector3(0.3, -0.2, -0.8);
+        spawnPos.applyMatrix4(camera.matrixWorld);
+        flightArrow.position.copy(spawnPos);
+
+        const dir = new THREE.Vector3(0, 0, -1);
+        dir.applyQuaternion(camera.quaternion);
+
+        const speed = 36 + drawPower * 24;
+        const velocity = dir.clone().multiplyScalar(speed);
+
+        flightArrow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), dir);
+        scene.add(flightArrow);
+
+        activeArrows.push({
+            mesh: flightArrow,
+            velocity: velocity,
+            alive: true,
+            timeInFlight: 0
+        });
+
+        gameState.arrowsLeft--;
+        updateHUD();
+    }
+
+    function resetBowString() {
+        const stringGeo = bowMesh.userData.stringGeo;
+        const posAttr = stringGeo.attributes.position;
+        posAttr.setXYZ(1, 0, 0, 0.1);
+        posAttr.needsUpdate = true;
+        bowGroup.position.z = -1.2;
+    }
+
+    function updateBowDrawAnimation() {
+        if (isAiming && drawPower < 1) {
+            drawPower = Math.min(1, drawPower + 0.035);
+            
+            const stringGeo = bowMesh.userData.stringGeo;
+            const posAttr = stringGeo.attributes.position;
+            posAttr.setXYZ(1, 0, 0, 0.1 + drawPower * 0.42);
+            posAttr.needsUpdate = true;
+
+            bowGroup.position.z = -1.2 + drawPower * 0.15;
+            readyArrow.position.z = 0.2 + drawPower * 0.35;
+        }
+    }
+
+    const gravity = new THREE.Vector3(0, -9.8, 0);
+
+    function updateArrowPhysics(dt) {
+        for (let i = activeArrows.length - 1; i >= 0; i--) {
+            const arrowData = activeArrows[i];
+            if (!arrowData.alive) continue;
+
+            arrowData.timeInFlight += dt;
+            
+            // Integrate Wind Vector force dynamically into flight trajectory
+            const currentAcceleration = gravity.clone().add(windState.vector);
+            arrowData.velocity.addScaledVector(currentAcceleration, dt * 0.4);
+
+            const prevPos = arrowData.mesh.position.clone();
+            arrowData.mesh.position.addScaledVector(arrowData.velocity, dt);
+
+            const nextDir = arrowData.velocity.clone().normalize();
+            arrowData.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), nextDir);
+
+            checkTargetCollision(arrowData, prevPos);
+
+            if (arrowData.timeInFlight > 3.0) {
+                scene.remove(arrowData.mesh);
+                activeArrows.splice(i, 1);
+                handleTurnProgress(0);
+            }
+        }
+    }
+
+    // =========================================================================
+    // 7. TARGET COLLISION & ENHANCED FLOATING SCORE POPUPS
+    // =========================================================================
+    function checkTargetCollision(arrowData, prevPos) {
+        const arrowPos = arrowData.mesh.position;
+
+        if (prevPos.z > -16.8 && arrowPos.z <= -16.8) {
+            const dx = arrowPos.x - targetCenterWorldPos.x;
+            const dy = arrowPos.y - targetCenterWorldPos.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            let score = 0;
+            if (dist <= 0.4) score = 10;
+            else if (dist <= 0.8) score = 8;
+            else if (dist <= 1.2) score = 6;
+            else if (dist <= 1.6) score = 4;
+            else if (dist <= 2.0) score = 2;
+
+            arrowData.alive = false;
+            arrowData.mesh.position.z = -16.7;
+            gameState.stuckArrows.push(arrowData.mesh);
+
+            soundCtrl.playHit(score);
+            showScorePopup(score, arrowPos);
+            triggerTargetImpactReaction();
+
+            // Randomize wind after interaction for upcoming shot
+            randomizeWind();
+
+            setTimeout(() => {
+                handleTurnProgress(score);
+            }, 800);
+        }
+    }
+
+    function triggerTargetImpactReaction() {
+        let elapsed = 0;
+        const origY = targetMeshGroup.position.y;
+        
+        // Additive board glow flare
+        if (boardLightGlowRing) {
+            boardLightGlowRing.material.opacity = 0.6;
+        }
+
+        const interval = setInterval(() => {
+            elapsed += 0.05;
+            targetMeshGroup.position.y = origY + Math.sin(elapsed * 40) * 0.08;
+            if (boardLightGlowRing) {
+                boardLightGlowRing.material.opacity = Math.max(0.15, 0.6 - elapsed);
+            }
+            if (elapsed >= 0.3) {
+                targetMeshGroup.position.y = origY;
+                if (boardLightGlowRing) boardLightGlowRing.material.opacity = 0.15;
+                clearInterval(interval);
+            }
+        }, 16);
+    }
+
+    function showScorePopup(score, pos) {
+        const popup = document.createElement('div');
+        popup.className = 'score-popup';
+        
+        let labelText = 'MISS';
+        if (score === 10) labelText = 'BULLSEYE! +100';
+        else if (score === 8) labelText = 'PERFECT! +50';
+        else if (score === 6) labelText = '+25';
+        else if (score > 0) labelText = `+${score * 5}`;
+
+        popup.innerText = labelText;
+        
+        const screenPos = pos.clone().project(camera);
+        const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-(screenPos.y * 0.5) + 0.5) * window.innerHeight;
+
+        popup.style.left = `${x}px`;
+        popup.style.top = `${y}px`;
+
+        document.getElementById('ui-layer').appendChild(popup);
+        setTimeout(() => popup.remove(), 1100);
+    }
+
+    // =========================================================================
+    // 8. TURN MANAGEMENT & AI LOGIC
+    // =========================================================================
+    function handleTurnProgress(score) {
+        if (gameState.activePlayer === 1) {
+            gameState.p1CurrentTurnScore += score;
+        } else {
+            gameState.p2CurrentTurnScore += score;
+        }
+
+        updateHUD();
+
+        if (gameState.arrowsLeft > 0) {
+            if (gameState.activePlayer === 1 || config.mode === '2P') {
+                gameState.currentState = GAME_STATES.PLAYER_TURN;
+                readyArrow.visible = true;
+                updateWindUI();
+            } else {
+                executeAITurn();
+            }
+        } else {
+            endTurn();
+        }
+    }
+
+    function endTurn() {
+        if (gameState.activePlayer === 1) {
+            gameState.p1TotalScore += gameState.p1CurrentTurnScore;
+            gameState.activePlayer = 2;
+            gameState.arrowsLeft = 3;
+            gameState.p2CurrentTurnScore = 0;
+
+            showTurnBanner(config.mode === 'AI' ? "AI TURN" : "PLAYER 2 TURN");
+
+            setTimeout(() => {
+                updateHUD();
+                if (config.mode === 'AI') {
+                    executeAITurn();
+                } else {
+                    gameState.currentState = GAME_STATES.PLAYER_TURN;
+                    readyArrow.visible = true;
+                    updateWindUI();
+                }
+            }, 1400);
+
+        } else {
+            gameState.p2TotalScore += gameState.p2CurrentTurnScore;
+            gameState.currentState = GAME_STATES.GAME_OVER;
+            showGameOverModal();
+        }
+    }
+
+    function executeAITurn() {
+        gameState.currentState = GAME_STATES.AI_THINKING;
+        readyArrow.visible = false;
+        updateWindUI();
+
+        setTimeout(() => {
+            if (gameState.currentState !== GAME_STATES.AI_THINKING) return;
+
+            let errorRadius = 1.8;
+            if (config.difficulty === 'MEDIUM') errorRadius = 1.0;
+            if (config.difficulty === 'HARD') errorRadius = 0.4;
+
+            const angle = Math.random() * Math.PI * 2;
+            const r = Math.random() * errorRadius;
+            const hitX = targetCenterWorldPos.x + Math.cos(angle) * r;
+            const hitY = targetCenterWorldPos.y + Math.sin(angle) * r;
+
+            const aiArrow = createArrowMesh();
+            aiArrow.position.set(0.5, 1.8, 6);
+            scene.add(aiArrow);
+
+            const startPos = aiArrow.position.clone();
+            const endPos = new THREE.Vector3(hitX, hitY, -16.7);
+            let progress = 0;
+
+            soundCtrl.playRelease();
+
+            const aiFlightInterval = setInterval(() => {
+                progress += 0.05;
+                aiArrow.position.lerpVectors(startPos, endPos, progress);
+                aiArrow.position.y += Math.sin(progress * Math.PI) * 1.2;
+
+                if (progress >= 1.0) {
+                    clearInterval(aiFlightInterval);
+                    
+                    const dx = endPos.x - targetCenterWorldPos.x;
+                    const dy = endPos.y - targetCenterWorldPos.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    let score = 0;
+                    if (dist <= 0.4) score = 10;
+                    else if (dist <= 0.8) score = 8;
+                    else if (dist <= 1.2) score = 6;
+                    else if (dist <= 1.6) score = 4;
+                    else if (dist <= 2.0) score = 2;
+
+                    gameState.stuckArrows.push(aiArrow);
+                    soundCtrl.playHit(score);
+                    showScorePopup(score, endPos);
+                    triggerTargetImpactReaction();
+
+                    randomizeWind();
+
+                    gameState.arrowsLeft--;
+                    handleTurnProgress(score);
+                }
+            }, 30);
+
+        }, 1200);
+    }
+
+    // =========================================================================
+    // 9. UI & HUD CONTROLLER
+    // =========================================================================
+    const uiElements = {
+        mainMenu: document.getElementById('main-menu'),
+        btnModeAI: document.getElementById('btn-mode-ai'),
+        btnMode2P: document.getElementById('btn-mode-2p'),
+        aiDiffContainer: document.getElementById('ai-difficulty-container'),
+        btnStart: document.getElementById('btn-start-game'),
+        btnSettings: document.getElementById('btn-settings-toggle'),
+        hudBottomLeft: document.getElementById('hud-bottom-left'),
+        hudBottomRight: document.getElementById('hud-bottom-right'),
+        hudTurnName: document.getElementById('hud-turn-name'),
+        hudScoreMain: document.getElementById('hud-score-main'),
+        hudScoreOpp: document.getElementById('hud-score-opp'),
+        arrows: [document.getElementById('arrow-1'), document.getElementById('arrow-2'), document.getElementById('arrow-3')],
+        turnIndicator: document.getElementById('turn-indicator'),
+        announcementOverlay: document.getElementById('announcement-overlay'),
+        announceTitle: document.getElementById('announce-title'),
+        announceDetails: document.getElementById('announce-details'),
+        btnPlayAgain: document.getElementById('btn-play-again'),
+        btnReturnMenu: document.getElementById('btn-return-menu')
+    };
+
+    uiElements.btnModeAI.addEventListener('click', () => {
+        soundCtrl.playClick();
+        config.mode = 'AI';
+        uiElements.btnModeAI.classList.add('active');
+        uiElements.btnMode2P.classList.remove('active');
+        uiElements.aiDiffContainer.style.display = 'block';
+    });
+
+    uiElements.btnMode2P.addEventListener('click', () => {
+        soundCtrl.playClick();
+        config.mode = '2P';
+        uiElements.btnMode2P.classList.add('active');
+        uiElements.btnModeAI.classList.remove('active');
+        uiElements.aiDiffContainer.style.display = 'none';
+    });
+
+    ['easy', 'medium', 'hard'].forEach(diff => {
+        const btn = document.getElementById(`btn-diff-${diff}`);
+        btn.addEventListener('click', () => {
+            soundCtrl.playClick();
+            config.difficulty = diff.toUpperCase();
+            ['easy', 'medium', 'hard'].forEach(d => document.getElementById(`btn-diff-${d}`).classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+    uiElements.btnStart.addEventListener('click', () => {
+        soundCtrl.playClick();
+        resetGame();
+        uiElements.mainMenu.classList.add('hidden');
+        uiElements.hudBottomLeft.classList.remove('hidden');
+        uiElements.hudBottomRight.classList.remove('hidden');
+        
+        gameState.currentState = GAME_STATES.PLAYER_TURN;
+        showTurnBanner("SHOOT!");
+        updateWindUI();
+    });
+
+    uiElements.btnSettings.addEventListener('click', () => {
+        soundCtrl.playClick();
+        uiElements.mainMenu.classList.toggle('hidden');
+    });
+
+    uiElements.btnPlayAgain.addEventListener('click', () => {
+        soundCtrl.playClick();
+        uiElements.announcementOverlay.classList.add('hidden');
+        resetGame();
+        gameState.currentState = GAME_STATES.PLAYER_TURN;
+        showTurnBanner("SHOOT!");
+        updateWindUI();
+    });
+
+    uiElements.btnReturnMenu.addEventListener('click', () => {
+        soundCtrl.playClick();
+        uiElements.announcementOverlay.classList.add('hidden');
+        uiElements.mainMenu.classList.remove('hidden');
+        uiElements.hudBottomLeft.classList.add('hidden');
+        uiElements.hudBottomRight.classList.add('hidden');
+        gameState.currentState = GAME_STATES.MENU;
+        updateWindUI();
+    });
+
+    function showTurnBanner(text) {
+        uiElements.turnIndicator.innerText = text;
+        uiElements.turnIndicator.classList.remove('hidden');
+        uiElements.turnIndicator.classList.add('visible');
+        setTimeout(() => {
+            uiElements.turnIndicator.classList.remove('visible');
+            setTimeout(() => uiElements.turnIndicator.classList.add('hidden'), 300);
+        }, 1100);
+    }
+
+    function updateHUD() {
+        if (gameState.activePlayer === 1) {
+            uiElements.hudTurnName.innerText = "YOUR TURN (P1)";
+            uiElements.hudScoreMain.innerText = `Score: ${gameState.p1TotalScore + gameState.p1CurrentTurnScore}`;
+            uiElements.hudScoreOpp.innerText = `${config.mode === 'AI' ? 'AI' : 'P2'}: ${gameState.p2TotalScore}`;
+        } else {
+            uiElements.hudTurnName.innerText = config.mode === 'AI' ? "AI'S TURN" : "PLAYER 2'S TURN";
+            uiElements.hudScoreMain.innerText = `Score: ${gameState.p2TotalScore + gameState.p2CurrentTurnScore}`;
+            uiElements.hudScoreOpp.innerText = `Player 1: ${gameState.p1TotalScore}`;
+        }
+
+        uiElements.arrows.forEach((arr, idx) => {
+            if (idx < gameState.arrowsLeft) {
+                arr.classList.remove('used');
+            } else {
+                arr.classList.add('used');
+            }
+        });
+    }
+
+    function showGameOverModal() {
+        uiElements.announcementOverlay.classList.remove('hidden');
+        uiElements.hudBottomLeft.classList.add('hidden');
+        uiElements.hudBottomRight.classList.add('hidden');
+        updateWindUI();
+
+        const p1 = gameState.p1TotalScore;
+        const p2 = gameState.p2TotalScore;
+
+        if (p1 > p2) {
+            uiElements.announceTitle.innerText = "YOU WIN! 🏆";
+        } else if (p2 > p1) {
+            uiElements.announceTitle.innerText = config.mode === 'AI' ? "AI WINS! 🤖" : "PLAYER 2 WINS! 🏆";
+        } else {
+            uiElements.announceTitle.innerText = "IT'S A DRAW! 🤝";
+        }
+
+        uiElements.announceDetails.innerText = `Player 1: ${p1} pts  |  ${config.mode === 'AI' ? 'AI' : 'P2'}: ${p2} pts`;
+    }
+
+    function resetGame() {
+        gameState.activePlayer = 1;
+        gameState.p1TotalScore = 0;
+        gameState.p2TotalScore = 0;
+        gameState.p1CurrentTurnScore = 0;
+        gameState.p2CurrentTurnScore = 0;
+        gameState.arrowsLeft = 3;
+
+        gameState.stuckArrows.forEach(arr => scene.remove(arr));
+        gameState.stuckArrows = [];
+
+        readyArrow.visible = true;
+        resetBowString();
+        randomizeWind();
+        updateHUD();
+    }
+
+    // =========================================================================
+    // 10. ANIMATION & RENDER LOOP
+    // =========================================================================
+    const clock = new THREE.Clock();
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        const dt = clock.getDelta();
+        const elapsedTime = clock.getElapsedTime();
+
+        // Dynamic cloud drifting
+        cloudsArray.forEach(c => {
+            c.mesh.position.x += c.speed * dt;
+            if (c.mesh.position.x > 30) c.mesh.position.x = -30;
+        });
+
+        // Target Sway
+        if (targetMeshGroup) {
+            targetMeshGroup.rotation.z = Math.sin(elapsedTime * 1.5) * 0.02;
+            targetMeshGroup.position.y = 3.8 + Math.cos(elapsedTime * 1.2) * 0.03;
+        }
+
+        // Additive animal & bird animations
+        updateBirds(dt, elapsedTime);
+        updateRabbit(dt);
+
+        updateBowDrawAnimation();
+        updateCameraRotation();
+        updateArrowPhysics(dt);
+
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+    </script>
+</body>
+</html>
