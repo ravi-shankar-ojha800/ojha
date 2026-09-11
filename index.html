@@ -1713,68 +1713,44 @@ body.bb-profile-native .bg-layer::after {
       };
     }
   </script>
-  <!-- MOBILE ROTATE PROMPT (ADDITIVE ONLY) -->
+  <!-- DESKTOP-ONLY NOTICE (mobile / android not supported) -->
   <style>
-    #mobileRotatePrompt {
+    #mobileRotatePrompt,
+    #desktopOnlyNotice {
       position: fixed;
       inset: 0;
       z-index: 999999;
-      background: #000;
+      background: radial-gradient(circle at 50% 30%, #101018 0%, #000 70%);
       display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 30px;
-      padding: 40px;
+      gap: 18px;
+      padding: 32px 24px;
+      text-align: center;
     }
-    #mobileRotatePrompt.show { display: flex; }
-    .rotate-icon {
-      width: 120px;
-      height: 120px;
-      animation: rotatePhone 1.5s ease-in-out infinite;
+    #desktopOnlyNotice.show { display: flex; }
+    .desktop-only-icon {
+      font-size: 3.5rem;
+      filter: drop-shadow(0 0 18px rgba(0,240,255,0.5));
     }
-    @keyframes rotatePhone {
-      0% { transform: rotate(0deg); }
-      25% { transform: rotate(90deg); }
-      50% { transform: rotate(90deg); }
-      75% { transform: rotate(0deg); }
-      100% { transform: rotate(0deg); }
-    }
-    .rotate-icon svg { width: 100%; height: 100%; }
-    .rotate-text {
+    .desktop-only-title {
       font-family: var(--font-hud);
       color: #fff;
-      font-size: 1.5rem;
-      font-weight: 800;
-      text-align: center;
-      letter-spacing: 3px;
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 2px;
       text-transform: uppercase;
     }
-    .rotate-subtext {
+    .desktop-only-msg {
       font-family: var(--font-mono);
-      color: rgba(255,255,255,0.6);
-      font-size: 1rem;
-      text-align: center;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      max-width: 420px;
     }
-    .rotate-btn {
-      padding: 18px 50px;
-      background: var(--clr-accent);
-      color: #000;
-      border: none;
-      border-radius: 50px;
-      font-family: var(--font-hud);
-      font-size: 1.1rem;
-      font-weight: 800;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-top: 10px;
-    }
-    .rotate-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 30px var(--clr-accent-glow);
-    }
+    .desktop-only-msg b { color: var(--clr-accent); }
+  </style>
     /* RESOURCE PRELOADER */
     #resourcePreloader {
       position: fixed;
@@ -1826,20 +1802,13 @@ body.bb-profile-native .bg-layer::after {
 
 <body>
 
-  <!-- MOBILE ROTATE PROMPT (ADDITIVE ONLY - Shows on portrait mode on mobile) -->
-  <div id="mobileRotatePrompt">
-    <div class="rotate-icon">
-      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="30" y="15" width="40" height="70" rx="6" stroke="#00f0ff" stroke-width="3" fill="none"/>
-        <rect x="35" y="22" width="30" height="50" rx="2" fill="rgba(0,240,255,0.1)"/>
-        <circle cx="50" cy="78" r="3" fill="#00f0ff"/>
-        <path d="M45 10 L50 5 L55 10" stroke="#00f0ff" stroke-width="2" fill="none"/>
-      </svg>
-    </div>
-    <div class="rotate-text">ROTATE YOUR PHONE</div>
-    <div class="rotate-subtext">For the best experience, please rotate your device to landscape mode</div>
-    <button class="rotate-btn" onclick="autoRotateScreen()">AUTO ROTATE</button>
+  <!-- DESKTOP-ONLY NOTICE (mobile open karne par friendly message) -->
+  <div id="desktopOnlyNotice">
+    <div class="desktop-only-icon">🖥️</div>
+    <div class="desktop-only-title">Please open on Desktop / Laptop</div>
+    <div class="desktop-only-msg">It's not working on mobile.<br>Please open this link in <b>PC / Desktop / MacBook / Linux / Windows</b>.<br>It doesn't support Android browser.</div>
   </div>
+  <div id="mobileRotatePrompt" style="display:none !important;"></div>
 
   <!-- BACKGROUND MUSIC SYSTEM: ASSETS\Lanterns_Above_the_Keep.mp3 -->
   <audio id="bgMusic" src="ASSETS/Lanterns_Above_the_Keep.mp3" loop preload="auto"></audio>
@@ -2767,47 +2736,29 @@ body.bb-profile-native .bg-layer::after {
     // Profile single background (PROF1 only)
     
     /* =========================================
-       MOBILE FEATURES (ADDITIVE - NEW)
-       Rotate prompt, auto-rotate, preloader
+       DESKTOP-ONLY CHECK (mobile / android not supported)
+       Rotating system removed — friendly message only
        ========================================= */
     let selectedReviewRating = 0;
 
     // Check if mobile device
     function isMobileDevice() {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth < 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
     }
 
-    // Show rotate prompt on mobile portrait
+    // Show desktop-only notice on mobile (no rotate, no auto-rotate)
     function checkOrientation() {
-      const rotatePrompt = document.getElementById('mobileRotatePrompt');
-      if (!rotatePrompt) return;
-
-      if (isMobileDevice() && window.innerHeight > window.innerWidth) {
-        rotatePrompt.classList.add('show');
+      const notice = document.getElementById('desktopOnlyNotice');
+      if (!notice) return;
+      if (isMobileDevice()) {
+        notice.classList.add('show');
       } else {
-        rotatePrompt.classList.remove('show');
+        notice.classList.remove('show');
       }
     }
 
-    // Auto rotate screen to landscape
-    function autoRotateScreen() {
-      const rotatePrompt = document.getElementById('mobileRotatePrompt');
-      
-      // Try to lock orientation to landscape
-      if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('landscape').then(() => {
-          rotatePrompt.classList.remove('show');
-          enterFullscreen();
-        }).catch(() => {
-          // Fallback: just go fullscreen
-          rotatePrompt.classList.remove('show');
-          enterFullscreen();
-        });
-      } else {
-        rotatePrompt.classList.remove('show');
-        enterFullscreen();
-      }
-    }
+    // Rotating system removed — kept as no-op for old calls
+    function autoRotateScreen() { return; }
 
     // Enter fullscreen mode
     function enterFullscreen() {
