@@ -1650,13 +1650,13 @@ body.bb-profile-native .bg-layer::after {
       box-shadow: 0 0 20px var(--clr-accent-glow);
     }
   </style>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
   <!-- FIREBASE & OJHA BACKEND ENGINE -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="backend.js"></script>
   <script>
-    /* Fallback: If backend.js fails to load, create a mock OJHA_BACKEND for offline/local use */
+    /* Local mock backend (backend.js removed — no login, local profile only) */
     if (typeof OJHA_BACKEND === 'undefined') {
       window.OJHA_BACKEND = {
         generateUID: function() {
@@ -1750,7 +1750,6 @@ body.bb-profile-native .bg-layer::after {
       max-width: 420px;
     }
     .desktop-only-msg b { color: var(--clr-accent); }
-  </style>
     /* RESOURCE PRELOADER */
     #resourcePreloader {
       position: fixed;
@@ -1806,7 +1805,7 @@ body.bb-profile-native .bg-layer::after {
   <div id="desktopOnlyNotice">
     <div class="desktop-only-icon">🖥️</div>
     <div class="desktop-only-title">Please open on Desktop / Laptop</div>
-    <div class="desktop-only-msg">It's not working on mobile.<br>Please open this link in <b>PC / Desktop / MacBook / Linux / Windows</b>.<br>It doesn't support Android browser.</div>
+    <div class="desktop-only-msg">It's not working on mobile.<br>Please open this link in <b>PC / Desktop / MacBook / Linux / Windows</b>.<br>It doesn't support Android browser.<br><br>Please try to open this link / website in your <b>laptop, PC or MacBook</b>.</div>
   </div>
   <div id="mobileRotatePrompt" style="display:none !important;"></div>
 
@@ -2741,9 +2740,23 @@ body.bb-profile-native .bg-layer::after {
        ========================================= */
     let selectedReviewRating = 0;
 
-    // Check if mobile device
+    // Check if mobile device — smartphone detect, Desktop-site mode me bhi pakdega.
+    // Desktop-mode me UA desktop jaisa hota hai, isliye touch + small screen + mobile hints bhi check.
     function isMobileDevice() {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth < 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+      var ua = navigator.userAgent || '';
+      var uaMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|Touch/i.test(ua);
+      var maxTouch = (navigator.maxTouchPoints || 0) > 0;
+      var hasTouch = ('ontouchstart' in window) || maxTouch;
+      var smallScreen = Math.min(window.innerWidth || 9999, window.innerHeight || 9999) < 820;
+      var coarsePointer = false;
+      try { coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches; } catch(e) {}
+      var mobileHint = false;
+      try {
+        var ch = navigator.userAgentData;
+        if (ch && typeof ch.mobile !== 'undefined') mobileHint = !!ch.mobile;
+      } catch(e) {}
+      // Smartphone: touch + (mobile UA ya coarse pointer ya chhoti screen ya client-hint)
+      return hasTouch && (uaMobile || coarsePointer || smallScreen || mobileHint);
     }
 
     // Show desktop-only notice on mobile (no rotate, no auto-rotate)
