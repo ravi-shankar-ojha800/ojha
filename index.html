@@ -1062,36 +1062,38 @@ body.bb-profile-native .bg-layer::after {
       position: fixed;
       inset: 0;
       z-index: 100000;
-      overflow-y: auto;
-      overflow-x: hidden;
-      background: #030304;
+      overflow: hidden;
+      background: #030304 url('ASSETS/ojha_game_studios_poster.jpg') center center / cover no-repeat;
       opacity: 1;
       transition: opacity 1.1s cubic-bezier(0.16, 1, 0.3, 1), visibility 1.1s;
-      scrollbar-width: thin;
+      scrollbar-width: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     #importPage.leaving { opacity: 0; pointer-events: none; }
     #importPage.gone { visibility: hidden; }
 
-    /* FIXED background video — stays pinned while content scrolls */
-    .intro-bg-video {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      z-index: 0;
-      pointer-events: none;
-    }
+    /* FIXED background image — single full screen poster, no video, no scroll */
+    .intro-bg-video { display: none !important; }
     .intro-video-overlay {
-      position: fixed;
+      position: absolute;
       inset: 0;
       z-index: 1;
       pointer-events: none;
       background:
-        radial-gradient(circle at 50% 45%, transparent 0 42%, rgba(3,3,4,0.55) 100%),
-        linear-gradient(to bottom, rgba(3,3,4,0.6) 0%, rgba(3,3,4,0.25) 35%, rgba(3,3,4,0.45) 70%, rgba(3,3,4,0.85) 100%);
+        radial-gradient(circle at 50% 50%, transparent 0 45%, rgba(3,3,4,0.55) 100%),
+        linear-gradient(to bottom, rgba(3,3,4,0.35) 0%, rgba(3,3,4,0.15) 50%, rgba(3,3,4,0.55) 100%);
     }
-    .intro-content { position: relative; z-index: 2; }
+    .intro-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
     @keyframes introFadeUp {
       from { opacity: 0; transform: translateY(44px); filter: blur(8px); }
@@ -1099,76 +1101,45 @@ body.bb-profile-native .bg-layer::after {
     }
     @keyframes introLineGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-    /* HERO */
+    /* HERO — single screen, no scroll, only ENTER button in centre */
     .intro-hero {
       min-height: 100vh;
+      width: 100%;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: flex-start;
+      align-items: center;
       padding: 0 8vw;
       position: relative;
+      text-align: center;
     }
-    .intro-kicker {
-      font-family: var(--font-mono);
-      font-size: clamp(0.7rem, 1.2vw, 0.95rem);
-      letter-spacing: 8px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.55);
-      opacity: 0;
-      animation: introFadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
-    }
-    .intro-title {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-weight: 900;
-      font-size: clamp(5rem, 17vw, 16rem);
-      line-height: 0.95;
-      letter-spacing: 2px;
-      color: rgba(255,255,255,0.9);
-      margin: 18px 0 10px;
-      text-shadow: 0 12px 80px rgba(0,0,0,0.65);
-      opacity: 0;
-      animation: introFadeUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
-    }
-    .intro-subtitle {
-      max-width: 520px;
-      font-family: var(--font-body);
-      font-weight: 400;
-      font-size: clamp(1rem, 1.6vw, 1.25rem);
-      line-height: 1.7;
-      color: rgba(220,224,230,0.72);
-      opacity: 0;
-      animation: introFadeUp 1.3s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
-    }
-    .intro-title-line {
-      width: 120px;
-      height: 1px;
-      margin-top: 34px;
-      background: linear-gradient(90deg, rgba(255,255,255,0.75), transparent);
-      transform-origin: left;
-      transform: scaleX(0);
-      animation: introLineGrow 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards;
-    }
+    .intro-kicker,
+    .intro-title,
+    .intro-subtitle,
+    .intro-title-line,
+    .intro-scroll-hint,
+    .intro-section,
+    .intro-footer { display: none !important; }
     .intro-enter-btn {
-      margin-top: 46px;
-      padding: 19px 68px;
+      margin: 0;
+      padding: 20px 84px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.38);
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(20px) saturate(140%);
-      -webkit-backdrop-filter: blur(20px) saturate(140%);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 14px 44px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 14px 44px rgba(0,0,0,0.45), 0 0 34px rgba(255,255,255,0.12);
       color: #fff;
       font-family: var(--font-hud);
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: 800;
-      letter-spacing: 7px;
+      letter-spacing: 8px;
       text-transform: uppercase;
       cursor: pointer;
       transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
       opacity: 0;
-      animation: introFadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1s forwards;
+      animation: introFadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
     }
     .intro-enter-btn:hover {
       background: rgba(255,255,255,0.94);
@@ -1179,72 +1150,20 @@ body.bb-profile-native .bg-layer::after {
       box-shadow: 0 24px 70px rgba(255,255,255,0.28), inset 0 1px 0 rgba(255,255,255,0.9);
     }
     .intro-enter-btn:active { transform: scale(0.96); }
-    .intro-scroll-hint {
-      position: absolute;
-      bottom: 42px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      letter-spacing: 6px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.45);
-      animation: pulse 2.6s ease-in-out infinite;
-    }
-    .intro-scroll-hint::after {
-      content: '';
-      display: block;
-      width: 1px;
-      height: 44px;
-      margin: 14px auto 0;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
-    }
 
+    /* Legacy intro blocks removed — single screen only, no scroll */
+    .intro-scroll-hint,
+    .intro-section,
+    .intro-section-tag,
+    .intro-section-title,
+    .intro-section-text,
+    .intro-quote,
+    .intro-features-grid,
+    .intro-glass-card,
+    .intro-credits-list,
+    .intro-footer { display: none !important; }
 
-    /* INTRO SECTIONS + SCROLL REVEAL */
-    .intro-section {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 150px 8vw;
-      position: relative;
-    }
-    .intro-section-tag {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      letter-spacing: 6px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.42);
-      margin-bottom: 26px;
-    }
-    .intro-section-title {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-weight: 800;
-      font-size: clamp(2rem, 4.5vw, 3.4rem);
-      line-height: 1.15;
-      color: rgba(255,255,255,0.92);
-      margin-bottom: 28px;
-    }
-    .intro-section-text {
-      max-width: 640px;
-      font-family: var(--font-body);
-      font-size: clamp(1rem, 1.4vw, 1.15rem);
-      line-height: 1.85;
-      color: rgba(214,218,224,0.68);
-    }
-    .intro-quote {
-      max-width: 760px;
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-weight: 600;
-      font-size: clamp(1.3rem, 2.6vw, 1.9rem);
-      line-height: 1.55;
-      color: rgba(240,242,245,0.85);
-      border-left: 1px solid rgba(255,255,255,0.28);
-      padding-left: 34px;
-    }
-
-    /* Scroll-reveal engine */
+    /* Scroll-reveal engine (kept harmless, no reveal nodes remain) */
     [data-reveal] {
       opacity: 0;
       transform: translateY(56px);
@@ -1259,89 +1178,11 @@ body.bb-profile-native .bg-layer::after {
     [data-reveal][data-reveal-delay="3"] { transition-delay: 0.36s; }
     [data-reveal].revealed { opacity: 1; transform: translateY(0); filter: blur(0); }
 
-    /* Glass feature cards */
-    .intro-features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-      gap: 24px;
-      margin-top: 54px;
-    }
-    .intro-glass-card {
-      background: linear-gradient(150deg, rgba(14,14,19,0.5), rgba(8,8,11,0.32));
-      backdrop-filter: blur(26px) saturate(130%);
-      -webkit-backdrop-filter: blur(26px) saturate(130%);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 20px;
-      padding: 36px 30px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 18px 50px rgba(0,0,0,0.35);
-      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .intro-glass-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(255,255,255,0.3);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 30px 70px rgba(0,0,0,0.5);
-    }
-    .intro-card-icon { font-size: 2rem; margin-bottom: 18px; filter: drop-shadow(0 0 14px rgba(255,255,255,0.25)); }
-    .intro-card-name {
-      font-family: var(--font-hud);
-      font-size: 0.95rem;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #fff;
-      margin-bottom: 10px;
-    }
-    .intro-card-desc {
-      font-family: var(--font-body);
-      font-size: 0.92rem;
-      line-height: 1.65;
-      color: rgba(214,218,224,0.62);
-    }
-
-    /* Credits */
-    .intro-credits-list { max-width: 640px; margin-top: 44px; display: flex; flex-direction: column; }
-    .intro-credit-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 30px;
-      padding: 20px 4px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .intro-credit-row:first-child { border-top: 1px solid rgba(255,255,255,0.1); }
-    .intro-credit-role { font-family: var(--font-mono); font-size: 0.82rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.45); }
-    .intro-credit-value { font-family: var(--font-body); font-weight: 700; font-size: 1rem; color: rgba(245,246,248,0.88); text-align: right; }
-
-    /* Footer */
-    .intro-footer {
-      text-align: center;
-      padding: 140px 8vw 90px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .intro-footer-mark {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-weight: 900;
-      font-size: clamp(3rem, 9vw, 7rem);
-      color: rgba(255,255,255,0.35);
-      letter-spacing: 4px;
-      margin-bottom: 30px;
-    }
-    .intro-footer .intro-enter-btn { animation-delay: 0.1s; }
-    .intro-footer-note {
-      margin-top: 46px;
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      letter-spacing: 3px;
-      color: rgba(255,255,255,0.35);
-    }
+    /* Glass feature cards (removed — single screen only) */
 
     /* Intro mobile refinement */
     @media (max-width: 768px) {
       .intro-hero { padding: 0 7vw; }
-      .intro-section { padding: 100px 7vw; }
       .intro-enter-btn { padding: 16px 46px; letter-spacing: 5px; }
     }
 
@@ -2000,6 +1841,9 @@ body.bb-profile-native .bg-layer::after {
     <button class="rotate-btn" onclick="autoRotateScreen()">AUTO ROTATE</button>
   </div>
 
+  <!-- BACKGROUND MUSIC SYSTEM: ASSETS\Lanterns_Above_the_Keep.mp3 -->
+  <audio id="bgMusic" src="ASSETS/Lanterns_Above_the_Keep.mp3" loop preload="auto"></audio>
+
   <!-- RESOURCE PRELOADER (ADDITIVE ONLY - Loads all assets before showing site) -->
   <div id="resourcePreloader">
     <div class="preloader-logo">OJHA</div>
@@ -2014,116 +1858,14 @@ body.bb-profile-native .bg-layer::after {
        Fixed looping background video + cinematic content
        ================================================== -->
   <div id="importPage">
-    <video class="intro-bg-video" id="introBgVideo" autoplay muted loop playsinline preload="auto">
-      <source src="https://cdn.pixabay.com/video/2025/11/01/313221_large.mp4" type="video/mp4">
-    </video>
     <div class="intro-video-overlay"></div>
 
     <div class="intro-content">
 
-      <!-- HERO -->
+      <!-- HERO — single screen only: background image + centre ENTER -->
       <section class="intro-hero">
-        <p class="intro-kicker">Welcome to the next dimension of play</p>
-        <h1 class="intro-title">OJHA</h1>
-        <p class="intro-subtitle">A cinematic game launcher experience — crafted for players who demand more. Step inside.</p>
-        <div class="intro-title-line"></div>
         <button class="intro-enter-btn" id="introEnterBtn">Enter</button>
-        <div class="intro-scroll-hint">Scroll</div>
       </section>
-
-      <!-- ABOUT -->
-      <section class="intro-section" data-reveal>
-        <div class="intro-section-tag">01 — About</div>
-        <h2 class="intro-section-title" data-reveal data-reveal-delay="1">More than a launcher.<br>A gateway.</h2>
-        <p class="intro-section-text" data-reveal data-reveal-delay="2">
-          OJHA is a premium AAA-style game platform built around a single belief — playing should feel
-          extraordinary from the very first second. A living 3D game library, real-time global competition,
-          and a world of collectibles all wrapped inside one seamless cinematic interface.
-        </p>
-      </section>
-
-      <!-- THE IDEA -->
-      <section class="intro-section" data-reveal>
-        <div class="intro-section-tag">02 — The Idea</div>
-        <p class="intro-quote" data-reveal data-reveal-delay="1">
-          "Every great game deserves a great stage. OJHA was born to give players a home —
-          not just a menu, but a universe they want to return to."
-        </p>
-        <p class="intro-section-text" style="margin-top: 36px;" data-reveal data-reveal-delay="2">
-          The idea was simple: combine the atmosphere of a blockbuster launch event with the depth of a
-          real gaming ecosystem — progression, rewards, identity, and community — all rendered in one
-          fluid, beautiful experience.
-        </p>
-      </section>
-
-      <!-- FEATURES -->
-      <section class="intro-section" data-reveal>
-        <div class="intro-section-tag">03 — Features</div>
-        <h2 class="intro-section-title" data-reveal data-reveal-delay="1">Everything you need.<br>Nothing you don't.</h2>
-        <div class="intro-features-grid">
-          <div class="intro-glass-card" data-reveal data-reveal-delay="1">
-            <div class="intro-card-icon">🎮</div>
-            <div class="intro-card-name">3D Game Library</div>
-            <div class="intro-card-desc">A rotating cinematic carousel of titles — browse, discover and launch instantly.</div>
-          </div>
-          <div class="intro-glass-card" data-reveal data-reveal-delay="2">
-            <div class="intro-card-icon">🏆</div>
-            <div class="intro-card-name">Global Leaderboards</div>
-            <div class="intro-card-desc">Real regional, national and worldwide rankings powered by live score submission.</div>
-          </div>
-          <div class="intro-glass-card" data-reveal data-reveal-delay="3">
-            <div class="intro-card-icon">👥</div>
-            <div class="intro-card-name">Friend System</div>
-            <div class="intro-card-desc">Search players, send requests, view profiles and build your squad.</div>
-          </div>
-          <div class="intro-glass-card" data-reveal data-reveal-delay="1">
-            <div class="intro-card-icon">🛍️</div>
-            <div class="intro-card-name">Store & Inventory</div>
-            <div class="intro-card-desc">Avatars, banners, badges, emotes and frames — earn coins, own your identity.</div>
-          </div>
-          <div class="intro-glass-card" data-reveal data-reveal-delay="2">
-            <div class="intro-card-icon">⭐</div>
-            <div class="intro-card-name">XP & Achievements</div>
-            <div class="intro-card-desc">Level up, unlock achievements and watch your profile evolve with every match.</div>
-          </div>
-          <div class="intro-glass-card" data-reveal data-reveal-delay="3">
-            <div class="intro-card-icon">🚀</div>
-            <div class="intro-card-name">Instant Play</div>
-            <div class="intro-card-desc">Games launch directly inside the launcher — zero downloads, zero waiting.</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- THE EXPERIENCE -->
-      <section class="intro-section" data-reveal>
-        <div class="intro-section-tag">04 — The Experience</div>
-        <h2 class="intro-section-title" data-reveal data-reveal-delay="1">Press Enter.<br>The arena awakens.</h2>
-        <p class="intro-section-text" data-reveal data-reveal-delay="2">
-          Behind this page, a fully alive world is waiting — your operator avatar, your daily rewards,
-          your rivals on the leaderboard, and six worlds ready to be conquered. Everything you build here
-          is yours, saved and synced to your account.
-        </p>
-      </section>
-
-      <!-- CREDITS -->
-      <section class="intro-section" data-reveal>
-        <div class="intro-section-tag">05 — Credits</div>
-        <h2 class="intro-section-title" data-reveal data-reveal-delay="1">Built with obsession.</h2>
-        <div class="intro-credits-list" data-reveal data-reveal-delay="2">
-          <div class="intro-credit-row"><span class="intro-credit-role">Concept & Direction</span><span class="intro-credit-value">OJHA Studios</span></div>
-          <div class="intro-credit-row"><span class="intro-credit-role">Design & Engineering</span><span class="intro-credit-value">Team OJHA</span></div>
-          <div class="intro-credit-row"><span class="intro-credit-role">Backend & Live Services</span><span class="intro-credit-value">Firebase Engine</span></div>
-          <div class="intro-credit-row"><span class="intro-credit-role">Cinematic Footage</span><span class="intro-credit-value">Pixabay Visuals</span></div>
-          <div class="intro-credit-row"><span class="intro-credit-role">Typography</span><span class="intro-credit-value">Orbitron · Playfair · Jakarta</span></div>
-        </div>
-      </section>
-
-      <!-- FOOTER -->
-      <footer class="intro-footer" data-reveal>
-        <div class="intro-footer-mark">OJHA</div>
-        <button class="intro-enter-btn" id="introEnterBtnFooter">Enter</button>
-        <p class="intro-footer-note">© 2026 OJHA — All experiences reserved</p>
-      </footer>
 
     </div>
   </div>
@@ -2173,14 +1915,8 @@ body.bb-profile-native .bg-layer::after {
       <span class="sidebar-icon">🎒</span>
       <span class="sidebar-label">INVENTORY</span>
     </div>
-    <div class="sidebar-item" onclick="switchView('leaderboard')">
-      <span class="sidebar-icon">🏆</span>
-      <span class="sidebar-label">LEADERBOARD</span>
-    </div>
-    <div class="sidebar-item" onclick="switchView('friends')">
-      <span class="sidebar-icon">👥</span>
-      <span class="sidebar-label">FRIENDS</span>
-    </div>
+      <!-- LEADERBOARD REMOVED -->
+      <!-- FRIENDS REMOVED -->
     <div class="sidebar-item" onclick="switchView('events')">
       <span class="sidebar-icon">🎉</span>
       <span class="sidebar-label">EVENTS</span>
@@ -2190,8 +1926,8 @@ body.bb-profile-native .bg-layer::after {
       <span class="sidebar-label">ACHIEVEMENTS</span>
     </div>
     <div class="sidebar-item" onclick="switchView('profile')">
-      <span class="sidebar-icon">👤</span>
-      <span class="sidebar-label">PROFILE</span>
+      <span class="sidebar-icon">📊</span>
+      <span class="sidebar-label">GAME ANALYSER BOARD</span>
     </div>
     <div class="sidebar-item" onclick="switchView('settings')">
       <span class="sidebar-icon">⚙️</span>
@@ -2204,12 +1940,12 @@ body.bb-profile-native .bg-layer::after {
     <div class="nav-brand" onclick="switchView('home')">OJHA</div>
     <ul class="nav-links">
       <li class="nav-item active" onclick="switchView('home')">GAMES</li>
-      <li class="nav-item" onclick="switchView('profile')">PROFILE</li>
+      <li class="nav-item" onclick="switchView('profile')">GAME ANALYSER BOARD</li>
       <li class="nav-item" onclick="switchView('settings')">SETTINGS</li>
     </ul>
     <div class="compact-player-card" onclick="switchView('profile')">
       <div style="text-align: right;">
-        <div id="navPlayerName" style="font-family: var(--font-hud); font-size: 0.9rem; font-weight: 800;">GUEST</div>
+        <div id="navPlayerName" style="font-family: var(--font-hud); font-size: 0.9rem; font-weight: 800;">PLAYER</div>
         <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--clr-accent);">ONLINE</div>
       </div>
       <img id="navAvatar" src="about:blank" alt="Avatar">
@@ -2226,8 +1962,8 @@ body.bb-profile-native .bg-layer::after {
   <!-- 2. ONBOARDING / AVATAR SELECTION -->
   <div id="onboardingScreen" class="view-screen">
     <div class="onboarding-container glass-panel" style="padding: 50px;">
-      <h2 style="font-family: var(--font-hud); font-size: 1.8rem; margin-bottom: 10px;">SELECT OPERATOR</h2>
-      <p style="color: var(--clr-text-muted); margin-bottom: 30px; font-size: 0.9rem;">Choose your visual identity.</p>
+      <h2 style="font-family: var(--font-hud); font-size: 1.8rem; margin-bottom: 10px;">CREATE PROFILE</h2>
+      <p style="color: var(--clr-text-muted); margin-bottom: 30px; font-size: 0.9rem;">Select profile photo and enter your name.</p>
 
       <div class="avatar-carousel-wrapper">
         <button class="nav-arrow" onclick="changeAvatar(-1)">◀</button>
@@ -2237,12 +1973,12 @@ body.bb-profile-native .bg-layer::after {
         <button class="nav-arrow" onclick="changeAvatar(1)">▶</button>
       </div>
 
-      <input type="text" id="playerNameInput" class="input-premium" placeholder="ENTER CALLSIGN (e.g. Ghost)" maxlength="16">
+      <input type="text" id="playerNameInput" class="input-premium" placeholder="ENTER YOUR NAME" maxlength="16">
 
       <div class="auth-buttons">
-        <button class="btn-primary" onclick="completeOnboarding('guest')">CONTINUE AS GUEST</button>
-        <button class="btn-secondary" onclick="handleGoogleSignIn()">SIGN IN WITH GOOGLE</button>
-        <button class="btn-secondary" onclick="openEmailAuthModal()">EMAIL / PASSWORD ACCOUNT</button>
+        <button class="btn-primary" style="width:100%;" onclick="completeOnboarding()">ENTER</button>
+        <!-- SIGN-IN OPTIONS REMOVED: direct entry, no login required -->
+        <!-- EMAIL ACCOUNT OPTION REMOVED -->
         <button class="btn-secondary" style="border: none; font-size: 0.8rem; color: var(--clr-text-muted);" onclick="document.getElementById('fileUpload').click()">
           [ UPLOAD CUSTOM IMAGE ]
         </button>
@@ -2338,8 +2074,12 @@ body.bb-profile-native .bg-layer::after {
     </div>
   </div>
 
-  <!-- 4. PROFILE SCREEN -->
+  <!-- 4. GAME ANALYSER BOARD SCREEN (profile renamed, same stats) -->
   <div id="profileScreen" class="view-screen">
+    <div style="max-width:1400px; width:100%; margin:0 auto; padding:110px 40px 0;">
+      <h1 style="font-family:var(--font-hud); font-size:2.6rem; font-weight:900; letter-spacing:3px; margin-bottom:8px;">GAME ANALYSER BOARD</h1>
+      <p style="font-family:var(--font-mono); color:var(--clr-text-muted); margin-bottom:28px;">Your gameplay stats, achievements and match history.</p>
+    </div>
     <div class="profile-layout">
       <div class="profile-sidebar glass-panel" style="padding: 0; overflow: hidden;">
         <div class="profile-banner" id="profileBanner">
@@ -2352,7 +2092,7 @@ body.bb-profile-native .bg-layer::after {
           <div class="profile-avatar-large">
             <img id="profileAvatar" src="" alt="Profile">
           </div>
-          <h1 class="profile-name" id="profileNameDisplay">GUEST</h1>
+          <h1 class="profile-name" id="profileNameDisplay">PLAYER</h1>
           <p class="profile-title" id="profileTitleDisplay">PLAYER</p>
           <p class="profile-id">ID: <span id="profileIdDisplay">OJ-51-992</span></p>
 
@@ -2504,8 +2244,15 @@ body.bb-profile-native .bg-layer::after {
       <div class="settings-group">
         <h2>AUDIO</h2>
         <div class="setting-row">
+          <span class="setting-label">Background Music</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="bgMusicToggle" checked onchange="toggleBgMusic(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
           <span class="setting-label">Master Volume</span>
-          <input type="range" min="1" max="100" value="80" style="width: 200px; accent-color: var(--clr-accent);" onchange="updateSetting('volume', this.value)">
+          <input type="range" min="1" max="100" value="80" style="width: 200px; accent-color: var(--clr-accent);" onchange="updateSetting('volume', this.value)" oninput="updateBgMusicVolume(this.value)">
         </div>
         <div class="setting-row">
           <span class="setting-label">UI SFX</span>
@@ -2524,29 +2271,26 @@ body.bb-profile-native .bg-layer::after {
       </div>
 
       <div class="settings-group">
-        <h2>ACCOUNT</h2>
+        <h2>PROFILE</h2>
         <div class="setting-row">
-          <span class="setting-label">Account Type</span>
-          <span id="accountType" style="font-family: var(--font-mono); color: var(--clr-accent);">GUEST</span>
+          <span class="setting-label">Player Name</span>
+          <span id="accountType" style="font-family: var(--font-mono); color: var(--clr-accent);">PLAYER</span>
         </div>
-        <div class="setting-row" id="accountUidRow">
-          <span class="setting-label">Account ID</span>
+        <div class="setting-row" id="accountUidRow" style="display:none;">
+          <span class="setting-label">Player ID</span>
           <span id="settingsUid" style="font-family: var(--font-mono); color: var(--clr-accent); cursor: pointer;" onclick="copyAccountID()">UID-51-992 📋</span>
         </div>
-        <div class="setting-row" id="linkGoogleRow" style="cursor: pointer;" onclick="handleLinkGoogleAccount()">
-          <span class="setting-label" style="color: var(--clr-accent);">Link Google Account</span>
-          <span style="color: var(--clr-text-muted);">→</span>
-        </div>
+        <!-- Google link removed: no login required -->
         <div class="setting-row" style="cursor: pointer;" onclick="openBugReportModal()">
           <span class="setting-label">Report a Bug</span>
           <span style="color: var(--clr-text-muted);">→</span>
         </div>
-        <div class="setting-row" style="cursor: pointer;" onclick="handleSignOut()">
-          <span class="setting-label" style="color: #ffaa00;">Sign Out</span>
+        <div class="setting-row" style="cursor: pointer;" onclick="resetLocalProfile()">
+          <span class="setting-label" style="color: #ffaa00;">Reset Profile</span>
           <span style="color: var(--clr-text-muted);">→</span>
         </div>
         <div class="setting-row" style="cursor: pointer;" onclick="openDeleteAccountModal()">
-          <span class="setting-label" style="color: #ff4444;">Delete Account</span>
+          <span class="setting-label" style="color: #ff4444;">Delete Profile Data</span>
           <span style="color: #ff4444;">→</span>
         </div>
       </div>
@@ -2554,55 +2298,8 @@ body.bb-profile-native .bg-layer::after {
     </div>
   </div>
 
-  <!-- 6. LEADERBOARD SCREEN -->
-  <div id="leaderboardScreen" class="view-screen">
-    <div class="leaderboard-container">
-      <h1 style="font-family: var(--font-hud); font-size: 3rem; font-weight: 900; margin-bottom: 30px;">LEADERBOARD</h1>
-      
-      <div class="leaderboard-tabs" id="leaderboardScopeTabs">
-        <div class="leaderboard-tab" onclick="switchLeaderboardTab('regional', this)">REGIONAL</div>
-        <div class="leaderboard-tab" onclick="switchLeaderboardTab('national', this)">NATIONAL</div>
-        <div class="leaderboard-tab active" onclick="switchLeaderboardTab('global', this)">GLOBAL</div>
-        <div class="leaderboard-tab" onclick="switchLeaderboardTab('friends', this)">FRIENDS</div>
-      </div>
-
-      <div class="leaderboard-tabs" id="leaderboardGameTabs" style="margin-top: 20px; margin-bottom: 30px;">
-        <div class="leaderboard-tab active" onclick="switchLeaderboardGame('all', this)">ALL GAMES</div>
-        <div class="leaderboard-tab" onclick="switchLeaderboardGame('zombie', this)">TEMPLE FIGHTER</div>
-        <div class="leaderboard-tab" onclick="switchLeaderboardGame('figth', this)">PIXA JUMPER</div>
-        <div class="leaderboard-tab" onclick="switchLeaderboardGame('hillclimb', this)">DUSTY RIDER</div>
-        <div class="leaderboard-tab" onclick="switchLeaderboardGame('pawman', this)">GOOD DREAM</div>
-        <div class="leaderboard-tab" onclick="switchLeaderboardGame('game1', this)">DINO GO</div>
-        <div class="leaderboard-tab" onclick="switchLeaderboardGame('marioo', this)">DARE TRAFFIC</div>
-      </div>
-
-      <div class="leaderboard-list" id="leaderboardList">
-        <!-- JS Generated -->
-      </div>
-    </div>
-  </div>
-
-  <!-- 7. FRIENDS SCREEN -->
-  <div id="friendsScreen" class="view-screen">
-    <div class="friends-container">
-      <h1 style="font-family: var(--font-hud); font-size: 3rem; font-weight: 900; margin-bottom: 30px;">FRIENDS</h1>
-      
-      <div class="friends-tabs">
-        <div class="friends-tab active" onclick="switchFriendsTab('online', this)">ONLINE (5)</div>
-        <div class="friends-tab" onclick="switchFriendsTab('all', this)">ALL FRIENDS</div>
-        <div class="friends-tab" onclick="switchFriendsTab('requests', this)">REQUESTS (2)</div>
-        <div class="friends-tab" onclick="switchFriendsTab('blocked', this)">BLOCKED</div>
-      </div>
-
-      <div style="margin-bottom: 30px;">
-        <input type="text" class="input-premium" placeholder="SEARCH FRIENDS..." style="max-width: 400px;" oninput="searchFriends(this.value)">
-      </div>
-
-      <div class="friends-list" id="friendsList">
-        <!-- JS Generated -->
-      </div>
-    </div>
-  </div>
+  <!-- 6. LEADERBOARD SCREEN -- REMOVED -->
+  <!-- 7. FRIENDS SCREEN -- REMOVED -->
 
   <!-- 8. EVENTS SCREEN -->
   <div id="eventsScreen" class="view-screen">
@@ -2782,27 +2479,7 @@ body.bb-profile-native .bg-layer::after {
     </div>
   </div>
 
-  <!-- EMAIL AUTH MODAL -->
-  <div class="modal-overlay" id="emailAuthModal">
-    <div class="modal-content" style="max-width: 480px;">
-      <div class="modal-header">
-        <h2 class="modal-title" id="emailAuthTitle">ACCOUNT SIGN IN / REGISTER</h2>
-        <button class="modal-close" onclick="closeEmailAuthModal()">✕</button>
-      </div>
-      
-      <div class="modal-section" style="display: flex; flex-direction: column; gap: 15px;">
-        <input type="email" id="authEmailInput" class="input-premium" placeholder="ENTER EMAIL ADDRESS">
-        <input type="text" id="authUsernameInput" class="input-premium" placeholder="CREATE USERNAME (Min 3 chars)">
-        <input type="password" id="authPasswordInput" class="input-premium" placeholder="PASSWORD (Min 4 chars)">
-        <div id="authErrorMsg" style="color: #ff4444; font-family: var(--font-mono); font-size: 0.85rem; text-align: center; display: none;"></div>
-      </div>
-      
-      <div class="modal-actions" style="flex-direction: column; gap: 10px;">
-        <button class="btn-primary" style="width: 100%;" onclick="submitEmailRegistration()">CREATE NEW ACCOUNT</button>
-        <button class="btn-secondary" style="width: 100%;" onclick="submitEmailSignIn()">SIGN IN TO EXISTING ACCOUNT</button>
-      </div>
-    </div>
-  </div>
+  <!-- EMAIL AUTH MODAL -- REMOVED (no login required) -->
 
   <!-- BUG REPORT MODAL -->
   <div class="modal-overlay" id="bugReportModal">
@@ -2817,8 +2494,8 @@ body.bb-profile-native .bg-layer::after {
           <option value="Gameplay">Gameplay Issue</option>
           <option value="Graphics / Display">Graphics / Display</option>
           <option value="Audio">Audio Issue</option>
-          <option value="Leaderboard / Scores">Leaderboard / Scores</option>
-          <option value="Account / Auth">Account / Auth</option>
+          <option value="Scores">Scores</option>
+          <option value="Profile">Profile</option>
           <option value="Other">Other</option>
         </select>
         <textarea id="bugDescriptionInput" class="input-premium" style="height: 120px; text-align: left; resize: none; font-size: 0.95rem;" placeholder="Describe the issue you experienced in detail..."></textarea>
@@ -2831,17 +2508,17 @@ body.bb-profile-native .bg-layer::after {
     </div>
   </div>
 
-  <!-- DELETE ACCOUNT MODAL -->
+  <!-- DELETE PROFILE DATA MODAL -->
   <div class="modal-overlay" id="deleteAccountModal">
     <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header">
-        <h2 class="modal-title" style="color: #ff4444;">DELETE ACCOUNT</h2>
+        <h2 class="modal-title" style="color: #ff4444;">DELETE PROFILE DATA</h2>
         <button class="modal-close" onclick="closeDeleteAccountModal()">✕</button>
       </div>
       
       <div class="modal-section" style="display: flex; flex-direction: column; gap: 15px;">
         <p style="color: var(--clr-text-muted); font-size: 0.9rem; line-height: 1.5;">
-          <strong style="color: #ff4444;">WARNING:</strong> This action is PERMANENT. All your account progress, levels, XP, coins, high scores, leaderboard rankings, and friend connections will be deleted from the database.
+          <strong style="color: #ff4444;">WARNING:</strong> This action is PERMANENT. All your local profile progress, levels, XP, coins and high scores on this device will be deleted.
         </p>
         
         <label style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--clr-accent);">Reason for deletion:</label>
@@ -3029,39 +2706,20 @@ body.bb-profile-native .bg-layer::after {
       { title: 'SPEED RUN CHALLENGE', desc: 'Complete any game in under 60 seconds. Fastest times get on the leaderboard!', rewards: ['⚡ Speed Badge', '🪙 750 Coins', '⭐ 400 XP'], time: '1d 6h 20m', featured: false }
     ];
 
-    const FRIENDS_DATA = [
-      { name: 'ShadowHunter', status: 'online', level: 12, avatar: AVATARS[0] },
-      { name: 'NeonRider', status: 'online', level: 8, avatar: AVATARS[1] },
-      { name: 'CyberWolf', status: 'online', level: 15, avatar: AVATARS[2] },
-      { name: 'PhantomX', status: 'online', level: 6, avatar: AVATARS[3] },
-      { name: 'BlazeFury', status: 'online', level: 10, avatar: AVATARS[4] },
-      { name: 'NightHawk', status: 'offline', level: 9, avatar: AVATARS[0] },
-      { name: 'StormBringer', status: 'offline', level: 7, avatar: AVATARS[1] },
-      { name: 'IceQueen', status: 'offline', level: 11, avatar: AVATARS[2] }
-    ];
+    // Removed demo data (leaderboard + friends deleted)
+    const FRIENDS_DATA = [];
 
-    const LEADERBOARD_DATA = [
-      { name: 'ProGamer123', level: 25, score: 15420, country: '🇮🇳', coins: 12500, avatar: AVATARS[0] },
-      { name: 'ShadowHunter', level: 22, score: 14850, country: '🇺🇸', coins: 11200, avatar: AVATARS[1] },
-      { name: 'NeonRider', level: 20, score: 13900, country: '🇬🇧', coins: 9800, avatar: AVATARS[2] },
-      { name: 'CyberWolf', level: 18, score: 12650, country: '🇯🇵', coins: 8500, avatar: AVATARS[3] },
-      { name: 'PhantomX', level: 16, score: 11800, country: '🇩🇪', coins: 7200, avatar: AVATARS[4] },
-      { name: 'BlazeFury', level: 15, score: 10950, country: '🇫🇷', coins: 6500, avatar: AVATARS[0] },
-      { name: 'NightHawk', level: 14, score: 10200, country: '🇨🇦', coins: 5800, avatar: AVATARS[1] },
-      { name: 'StormBringer', level: 13, score: 9500, country: '🇦🇺', coins: 5200, avatar: AVATARS[2] },
-      { name: 'IceQueen', level: 12, score: 8800, country: '🇰🇷', coins: 4800, avatar: AVATARS[3] },
-      { name: 'DragonSlayer', level: 11, score: 8200, country: '🇧🇷', coins: 4200, avatar: AVATARS[4] }
-    ];
+    const LEADERBOARD_DATA = [];
 
     const LOADING_TIPS = [
       "Pro tip: Complete daily challenges for bonus rewards!",
       "Tip: Higher difficulty = more coins and XP!",
       "Did you know? You can customize your profile!",
       "Tip: Check the store for exclusive avatars!",
-      "Pro tip: Play with friends for bonus rewards!",
+      "Pro tip: Keep playing to raise your analyser stats!",
       "Tip: Level up to unlock new ranks!",
       "Did you know? Achievements give XP bonuses!",
-      "Tip: Customize your banner in the profile!"
+      "Tip: Customize your banner in the analyser board!"
     ];
 
     let playerState = {
@@ -3094,7 +2752,7 @@ body.bb-profile-native .bg-layer::after {
       matchHistory: [],
       settings: { motionBlur: true, hwAccel: true, volume: 80, uiSfx: true, theme: 0 },
       inventory: [],
-      accountType: 'guest',
+      accountType: 'local',
       ownedItems: []
     };
 
@@ -3273,6 +2931,74 @@ body.bb-profile-native .bg-layer::after {
     window.addEventListener('resize', checkOrientation);
 
     /* =========================================
+       BACKGROUND MUSIC (Lanterns_Above_the_Keep.mp3)
+       ENTER par start, hamesha loop me chalega.
+       Sirf game khelte time pause, game exit par wapas auto-resume.
+       ========================================= */
+    let bgMusicStarted = false;
+    let bgMusicEnabled = true;
+    let gameSessionActive = false;
+    let bgMusicVolume = 0.8;
+
+    function getBgMusic() {
+      return document.getElementById('bgMusic');
+    }
+
+    function startBgMusic() {
+      const audio = getBgMusic();
+      if (!audio) return;
+      audio.loop = true;
+      audio.volume = bgMusicVolume;
+      bgMusicStarted = true;
+      if (!bgMusicEnabled || gameSessionActive) return;
+      const p = audio.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
+
+    function pauseBgMusicForGame() {
+      gameSessionActive = true;
+      const audio = getBgMusic();
+      if (audio && !audio.paused) audio.pause();
+    }
+
+    // Game exit par music HAMESHA wapas continue hoga (kabhi OFF nahi rahega).
+    function stopBgMusicAfterGame() {
+      gameSessionActive = false;
+      const audio = getBgMusic();
+      if (!audio) return;
+      audio.loop = true;
+      audio.volume = bgMusicVolume;
+      if (bgMusicStarted && bgMusicEnabled) {
+        const p = audio.play();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      }
+    }
+
+    function resumeBgMusicAfterGame() {
+      // Game exit par auto-resume ON hai.
+      stopBgMusicAfterGame();
+    }
+
+    function toggleBgMusic(enabled) {
+      bgMusicEnabled = !!enabled;
+      const audio = getBgMusic();
+      if (!audio) return;
+      if (!bgMusicEnabled) {
+        if (!audio.paused) audio.pause();
+      } else if (bgMusicStarted && !gameSessionActive) {
+        const p = audio.play();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      }
+      try { localStorage.setItem('ojha_v54_bgmusic', bgMusicEnabled ? '1' : '0'); } catch(e) {}
+    }
+
+    function updateBgMusicVolume(val) {
+      bgMusicVolume = Math.max(0, Math.min(100, Number(val) || 80)) / 100;
+      const audio = getBgMusic();
+      if (audio) audio.volume = bgMusicVolume;
+    }
+
+    /* =========================================
        INITIALIZATION
        ========================================= */
     document.addEventListener('DOMContentLoaded', () => {
@@ -3312,8 +3038,7 @@ body.bb-profile-native .bg-layer::after {
       
       buildCarousel();
       buildThemeGrid();
-      buildLeaderboard();
-      buildFriendsList();
+      // Leaderboard + Friends removed
       buildEvents();
       buildAchievements();
       buildStore();
@@ -3491,11 +3216,11 @@ body.bb-profile-native .bg-layer::after {
       }
     }
 
-    function completeOnboarding(type) {
+    function completeOnboarding() {
       const nameInput = document.getElementById('playerNameInput').value.trim();
-      playerState.name = nameInput || (type === 'guest' ? 'GUEST_' + Math.floor(Math.random()*999) : 'OPERATOR');
+      playerState.name = nameInput || 'PLAYER_' + Math.floor(Math.random()*999);
       playerState.avatar = playerState.customAvatar || AVATARS[currentAvatarIdx];
-      playerState.accountType = type;
+      playerState.accountType = 'local';
       if (!playerState.uid) playerState.uid = OJHA_BACKEND.generateUID();
       
       // First login bonus
@@ -3514,125 +3239,47 @@ body.bb-profile-native .bg-layer::after {
       document.getElementById('leftSidebar').style.display = 'flex';
       setTimeout(() => document.getElementById('globalNav').style.opacity = '1', 100);
       
+      // Start launcher background music on ENTER (user gesture = autoplay allowed)
+      try {
+        const savedBgm = localStorage.getItem('ojha_v54_bgmusic');
+        if (savedBgm === '0') {
+          bgMusicEnabled = false;
+          const t = document.getElementById('bgMusicToggle');
+          if (t) t.checked = false;
+        }
+      } catch(e) {}
+      startBgMusic();
+
       switchView('home');
     }
 
     /* =========================================
-       AUTHENTICATION & ACCOUNT ACTIONS
+       ACCOUNT ACTIONS (local profile only, no login)
        ========================================= */
+    // Login / Sign-up removed: direct entry with profile photo + name only.
     function handleGoogleSignIn() {
-      OJHA_BACKEND.signInWithGoogle(playerState).then(account => {
-        playerState.uid = account.uid;
-        playerState.name = account.username;
-        playerState.email = account.email;
-        playerState.accountType = 'google';
-        playerState.avatar = account.avatar || playerState.avatar;
-        playerState.level = Math.max(playerState.level, account.level || 1);
-        playerState.coins = Math.max(playerState.coins, account.coins || 500);
-        playerState.country = account.country || playerState.country || '🇮🇳';
-        
-        saveState();
-        syncUI();
-        showToast(`Signed in with Google as ${account.email}`, 'success');
-
-        document.getElementById('bgOverlay').style.background = 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(5,5,7,1) 100%)';
-        document.getElementById('globalNav').style.display = 'flex';
-        document.getElementById('leftSidebar').style.display = 'flex';
-        setTimeout(() => document.getElementById('globalNav').style.opacity = '1', 100);
-        
-        switchView('home');
-      }).catch(err => {
-        showToast(err.message || 'Google Authentication failed', 'info');
-      });
+      showToast('Sign-in removed. Just enter your name and press ENTER.', 'info');
     }
 
     function openEmailAuthModal() {
-      document.getElementById('authEmailInput').value = playerState.email || '';
-      document.getElementById('authUsernameInput').value = playerState.name || '';
-      document.getElementById('authPasswordInput').value = '';
-      document.getElementById('authErrorMsg').style.display = 'none';
-      document.getElementById('emailAuthModal').classList.add('show');
+      showToast('Sign-in removed. Just enter your name and press ENTER.', 'info');
     }
 
     function closeEmailAuthModal() {
-      document.getElementById('emailAuthModal').classList.remove('show');
+      var m = document.getElementById('emailAuthModal');
+      if (m) m.classList.remove('show');
     }
 
     function submitEmailRegistration() {
-      const email = document.getElementById('authEmailInput').value.trim();
-      const username = document.getElementById('authUsernameInput').value.trim();
-      const password = document.getElementById('authPasswordInput').value.trim();
-      const errEl = document.getElementById('authErrorMsg');
-
-      OJHA_BACKEND.registerWithEmail(email, username, password, playerState).then(account => {
-        playerState.uid = account.uid;
-        playerState.name = account.username;
-        playerState.email = account.email;
-        playerState.accountType = 'email';
-        
-        saveState();
-        syncUI();
-        closeEmailAuthModal();
-        showToast(`Registered account for ${account.username}!`, 'success');
-
-        document.getElementById('globalNav').style.display = 'flex';
-        document.getElementById('leftSidebar').style.display = 'flex';
-        setTimeout(() => document.getElementById('globalNav').style.opacity = '1', 100);
-        
-        switchView('home');
-      }).catch(err => {
-        errEl.textContent = err.message;
-        errEl.style.display = 'block';
-      });
+      showToast('Sign-in removed. Just enter your name and press ENTER.', 'info');
     }
 
     function submitEmailSignIn() {
-      const emailOrUser = document.getElementById('authEmailInput').value.trim() || document.getElementById('authUsernameInput').value.trim();
-      const password = document.getElementById('authPasswordInput').value.trim();
-      const errEl = document.getElementById('authErrorMsg');
-
-      OJHA_BACKEND.signInWithEmail(emailOrUser, password).then(account => {
-        playerState.uid = account.uid;
-        playerState.name = account.username;
-        playerState.email = account.email;
-        playerState.accountType = 'email';
-        playerState.avatar = account.avatar || playerState.avatar;
-        playerState.level = account.level || playerState.level;
-        playerState.coins = account.coins || playerState.coins;
-        
-        saveState();
-        syncUI();
-        closeEmailAuthModal();
-        showToast(`Welcome back, ${account.username}!`, 'success');
-
-        document.getElementById('globalNav').style.display = 'flex';
-        document.getElementById('leftSidebar').style.display = 'flex';
-        setTimeout(() => document.getElementById('globalNav').style.opacity = '1', 100);
-        
-        switchView('home');
-      }).catch(err => {
-        errEl.textContent = err.message;
-        errEl.style.display = 'block';
-      });
+      showToast('Sign-in removed. Just enter your name and press ENTER.', 'info');
     }
 
     function handleLinkGoogleAccount() {
-      if (playerState.accountType === 'google') {
-        showToast('Account is already connected to Google!', 'info');
-        return;
-      }
-      OJHA_BACKEND.linkGuestToGoogle(playerState).then(account => {
-        playerState.uid = account.uid;
-        playerState.name = account.username;
-        playerState.email = account.email;
-        playerState.accountType = 'google';
-        
-        saveState();
-        syncUI();
-        showToast(`Linked Guest Account to Google (${account.email})! Progress preserved.`, 'success');
-      }).catch(err => {
-        showToast(err.message || 'Google account linking failed', 'info');
-      });
+      showToast('Google linking removed. Profile is stored locally on this device.', 'info');
     }
 
     function copyAccountID() {
@@ -3692,10 +3339,15 @@ body.bb-profile-native .bg-layer::after {
     }
 
     function handleSignOut() {
-      if (confirm('Are you sure you want to sign out?')) {
+      // Sign-out removed: local profile only. Reset asks for name/photo again.
+      resetLocalProfile();
+    }
+
+    function resetLocalProfile() {
+      if (confirm('Reset local profile? You will enter name + photo again.')) {
         localStorage.removeItem('ojha_v54_profile');
-        showToast('Signed out.', 'info');
-        setTimeout(() => location.reload(), 1000);
+        showToast('Profile reset.', 'info');
+        setTimeout(() => location.reload(), 800);
       }
     }
 
@@ -3764,8 +3416,8 @@ body.bb-profile-native .bg-layer::after {
       }
       
       const sidebarMap = {
-        'home': 0, 'games': 1, 'store': 2, 'inventory': 3, 'leaderboard': 4, 'friends': 5,
-        'events': 6, 'achievements': 7, 'profile': 8, 'settings': 9
+        'home': 0, 'games': 1, 'store': 2, 'inventory': 3,
+        'events': 4, 'achievements': 5, 'profile': 6, 'settings': 7
       };
       if (sidebarMap[viewId] !== undefined) {
         document.querySelectorAll('.sidebar-item')[sidebarMap[viewId]].classList.add('active');
@@ -3990,7 +3642,7 @@ body.bb-profile-native .bg-layer::after {
       {
         title: "CHECKERS",
         genre: "STRATEGY // BOARD GAME",
-        img: "https://i.pinimg.com/originals/ab/11/39/ab1139d58fc0914454881b866b2a914a.gif",
+        img: "https://i.pinimg.com/736x/6f/6e/41/6f6e41bcfe4622b4c4f6244445211cb9.jpg",
         file: "other game/checkers.html",
         color: "#8B4513",
         rating: 4.6,
@@ -4018,24 +3670,24 @@ body.bb-profile-native .bg-layer::after {
         ]
       },
       {
-        title: "RETRO SNAKE",
-        genre: "ARCADE // NOSTALGIA",
-        img: "https://i.pinimg.com/736x/3d/d3/af/3dd3af28aacfc6ae25e20f89c20fb192.jpg",
+        title: "PAC MAN",
+        genre: "ARCADE // MAZE CHASE",
+        img: "https://i.pinimg.com/1200x/23/cc/6c/23cc6c9b12a9efa38e2cc82c85064d70.jpg",
         file: "other game/snake.html",
         color: "#ffeb3b",
-        rating: 4.1,
+        rating: 4.8,
         plays: "14.7K",
         avgTime: "3:30",
-        desc: "The iconic Nokia snake game returns! Guide the snake to eat apples and grow longer without hitting yourself. Features classic edge-wrapping mechanics just like the original. Simple, addictive, and endlessly replayable.",
+        desc: "The iconic arcade maze chase! Gobble pellets, dodge ghosts, grab power pellets and clear the maze. Simple, addictive, and endlessly replayable.",
         reviews: [
-          { author: "RetroGamer", rating: 5, text: "Brings back so many memories! Just like the old Nokia phone game." },
+          { author: "ArcadeKing", rating: 5, text: "Classic Pac-Man feeling! Maze + ghosts = pure nostalgia." },
           { author: "CasualPlayer", rating: 4, text: "Simple but so addictive. Perfect quick game when you have a few minutes." }
         ]
       },
       {
         title: "TIC-TAC-TOE",
         genre: "STRATEGY // PUZZLE",
-        img: "https://i.pinimg.com/originals/30/ce/97/30ce978aa54e41e0d58a496cb998b27f.gif",
+        img: "https://i.pinimg.com/736x/6f/6e/41/6f6e41bcfe4622b4c4f6244445211cb9.jpg",
         file: "other game/tictac.html",
         color: "#FF6347",
         rating: 4.0,
@@ -4045,6 +3697,21 @@ body.bb-profile-native .bg-layer::after {
         reviews: [
           { author: "PuzzleLover", rating: 4, text: "Fun and quick! The hard mode AI is actually impossible to beat." },
           { author: "FamilyFun", rating: 4, text: "Great for kids and adults. Simple but entertaining!" }
+        ]
+      },
+      {
+        title: "ARCHERY MASTER",
+        genre: "3D // ARCHERY",
+        img: "https://i.pinimg.com/1200x/22/2d/8b/222d8b2841ad06a949e6fe7291ef7aa7.jpg",
+        file: "other game/Archery.html",
+        color: "#e59329",
+        rating: 4.9,
+        plays: "5.4K",
+        avgTime: "6:30",
+        desc: "A 3D low-poly archery experience! Read the wind, draw your bow, and hit the bullseye. Play against smart AI or challenge a friend in 2-player mode.",
+        reviews: [
+          { author: "BowMaster", rating: 5, text: "Wind + bow physics feels amazing. Bullseye is so satisfying!" },
+          { author: "TargetPro", rating: 5, text: "Best archery game in the library. AI mode is a real challenge!" }
         ]
       }
     );
@@ -4096,6 +3763,7 @@ body.bb-profile-native .bg-layer::after {
     }
 
     function launchGameFromFile(file, title, color) {
+      pauseBgMusicForGame();
       const homeVideo = document.getElementById('homeBgVideo');
       if (homeVideo) homeVideo.pause();
       const avatarVideo = document.getElementById('avatarBgVideo');
@@ -4488,6 +4156,7 @@ body.bb-profile-native .bg-layer::after {
        GAME LAUNCH SYSTEM (IN-LAUNCHER)
        ========================================= */
     function launchGame() {
+      pauseBgMusicForGame();
       // Fix: Always launch the game currently in the front/center of the rotating 3D carousel.
       // The carousel UI marks the front card using the `.active` class (set inside updateCarousel()).
       const activeCard = document.querySelector('.game-card.active');
@@ -4568,6 +4237,9 @@ body.bb-profile-native .bg-layer::after {
       document.getElementById('gameContainer').style.display = 'none';
       const iframe = document.getElementById('gameIframe');
       iframe.src = '';
+
+      // Launcher music game exit par WAPAS auto-resume hoga (hamesha loop)
+      stopBgMusicAfterGame();
       
       // Blur the iframe to remove focus
       iframe.blur();
@@ -4952,7 +4624,7 @@ body.bb-profile-native .bg-layer::after {
       document.getElementById('profileXpMax').textContent = playerState.level * 100;
       document.getElementById('profileCoins').textContent = '🪙 ' + playerState.coins.toLocaleString();
       document.getElementById('profileRank').textContent = getRank(playerState.level);
-      document.getElementById('profileStatus').textContent = playerState.accountType === 'guest' ? 'GUEST' : 'ONLINE';
+      document.getElementById('profileStatus').textContent = 'ONLINE';
       
       setTextIfPresent('statHours', playerState.hours.toFixed(1));
       setTextIfPresent('statMatches', playerState.matches);
@@ -5135,190 +4807,35 @@ body.bb-profile-native .bg-layer::after {
     }
 
     /* =========================================
-       REAL GLOBAL & REGIONAL LEADERBOARD
+       LEADERBOARD -- REMOVED
        ========================================= */
     let currentLbScope = 'global';
     let currentLbGame = 'all';
 
-    function buildLeaderboard() {
-      const list = document.getElementById('leaderboardList');
-      if (!list) return;
+    function buildLeaderboard() { return; }
 
-      const data = OJHA_BACKEND.getLeaderboard({
-        gameId: currentLbGame,
-        scope: currentLbScope,
-        currentUid: playerState.uid,
-        currentCountry: playerState.country || '🇮🇳'
-      });
+    function switchLeaderboardTab(tab, element) { return; }
 
-      if (!data || data.length === 0) {
-        list.innerHTML = '<p style="text-align: center; color: var(--clr-text-muted); padding: 40px;">No stored leaderboard entries found for this selection.</p>';
-        return;
-      }
-
-      list.innerHTML = data.map((player, i) => {
-        const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
-        const isCurrentUser = player.uid === playerState.uid;
-        return `
-          <div class="leaderboard-entry ${i < 3 ? 'top-' + (i+1) : ''} ${isCurrentUser ? 'current-user-lb' : ''}" style="${isCurrentUser ? 'border: 1px solid var(--clr-accent); background: rgba(0, 240, 255, 0.08);' : ''}">
-            <div class="rank-badge ${rankClass}">#${i + 1}</div>
-            <img class="lb-avatar" src="${player.avatar}" alt="${player.name}" onclick="openUserProfileModal('${player.uid}')" style="cursor: pointer;">
-            <div class="lb-info" onclick="openUserProfileModal('${player.uid}')" style="cursor: pointer;">
-              <div class="lb-name">${player.name} ${isCurrentUser ? '<span style="color: var(--clr-accent); font-size: 0.8rem;">(YOU)</span>' : ''}</div>
-              <div class="lb-level">Level ${player.level} • ${player.country}</div>
-            </div>
-            <div class="lb-score">${player.score.toLocaleString()} PTS</div>
-            <div class="lb-country">🪙 ${player.coins.toLocaleString()}</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function switchLeaderboardTab(tab, element) {
-      currentLbScope = tab;
-      const scopeTabs = document.querySelectorAll('#leaderboardScopeTabs .leaderboard-tab');
-      scopeTabs.forEach(t => t.classList.remove('active'));
-      if (element) element.classList.add('active');
-      buildLeaderboard();
-      showToast(`Showing ${tab.toUpperCase()} rankings`, 'info');
-    }
-
-    function switchLeaderboardGame(game, element) {
-      currentLbGame = game;
-      const gameTabs = document.querySelectorAll('#leaderboardGameTabs .leaderboard-tab');
-      gameTabs.forEach(t => t.classList.remove('active'));
-      if (element) element.classList.add('active');
-      buildLeaderboard();
-      showToast(`Filtering rankings by ${game.toUpperCase()}`, 'info');
-    }
+    function switchLeaderboardGame(game, element) { return; }
 
     /* =========================================
-       REAL FRIEND SYSTEM
+       FRIENDS -- REMOVED
        ========================================= */
     let currentFriendsTab = 'online';
 
-    function buildFriendsList(filter = 'online') {
-      currentFriendsTab = filter;
-      const list = document.getElementById('friendsList');
-      if (!list) return;
+    function buildFriendsList(filter = 'online') { return; }
 
-      if (filter === 'requests') {
-        const reqs = OJHA_BACKEND.getFriendRequests(playerState.uid);
-        if (reqs.length === 0) {
-          list.innerHTML = '<p style="text-align: center; color: var(--clr-text-muted); padding: 40px;">No pending friend requests.</p>';
-          return;
-        }
-        list.innerHTML = reqs.map(req => `
-          <div class="friend-entry">
-            <img class="friend-avatar" src="${req.senderAvatar || AVATARS[0]}" alt="${req.senderName}">
-            <div class="friend-info">
-              <div class="friend-name">${req.senderName}</div>
-              <div class="friend-status online">● PENDING REQUEST • Level ${req.senderLevel || 1}</div>
-            </div>
-            <div class="friend-actions" style="display: flex; gap: 10px;">
-              <button class="btn-primary" style="padding: 8px 16px; font-size: 0.8rem;" onclick="handleAcceptFriendRequest('${req.id}')">ACCEPT</button>
-              <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.8rem; color: #ff4444;" onclick="handleRejectFriendRequest('${req.id}')">REJECT</button>
-            </div>
-          </div>
-        `).join('');
-        return;
-      }
+    function switchFriendsTab(tab, element) { return; }
 
-      let friends = OJHA_BACKEND.getFriendsList(playerState.uid);
-      if (filter === 'online') {
-        friends = friends.filter(f => f.status === 'online');
-      }
+    function searchFriends(query) { return; }
 
-      if (friends.length === 0) {
-        list.innerHTML = '<p style="text-align: center; color: var(--clr-text-muted); padding: 40px;">No friends found. Search for users by Username or User ID above!</p>';
-        return;
-      }
+    function handleSendFriendRequest(targetUid) { return; }
 
-      list.innerHTML = friends.map(friend => `
-        <div class="friend-entry">
-          <img class="friend-avatar" src="${friend.avatar}" alt="${friend.name}" onclick="openUserProfileModal('${friend.uid}')" style="cursor: pointer;">
-          <div class="friend-info" onclick="openUserProfileModal('${friend.uid}')" style="cursor: pointer;">
-            <div class="friend-name">${friend.name}</div>
-            <div class="friend-status ${friend.status}">● ${friend.status.toUpperCase()} • Level ${friend.level} • ${friend.country}</div>
-          </div>
-          <div class="friend-actions" style="display: flex; gap: 10px;">
-            <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.8rem;" onclick="openUserProfileModal('${friend.uid}')">VIEW PROFILE</button>
-            <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.8rem; color: #ff4444;" onclick="handleRemoveFriend('${friend.uid}')">REMOVE</button>
-          </div>
-        </div>
-      `).join('');
-    }
+    function handleAcceptFriendRequest(reqId) { return; }
 
-    function switchFriendsTab(tab, element) {
-      document.querySelectorAll('.friends-tab').forEach(t => t.classList.remove('active'));
-      if (element) element.classList.add('active');
-      buildFriendsList(tab);
-    }
+    function handleRejectFriendRequest(reqId) { return; }
 
-    function searchFriends(query) {
-      const list = document.getElementById('friendsList');
-      if (!query || query.trim().length === 0) {
-        buildFriendsList(currentFriendsTab);
-        return;
-      }
-
-      const results = OJHA_BACKEND.searchUsers(query);
-      const filtered = results.filter(u => u.uid !== playerState.uid);
-
-      if (filtered.length === 0) {
-        list.innerHTML = `<p style="text-align: center; color: var(--clr-text-muted); padding: 40px;">No users found matching "${query}".</p>`;
-        return;
-      }
-
-      list.innerHTML = filtered.map(user => `
-        <div class="friend-entry">
-          <img class="friend-avatar" src="${user.avatar}" alt="${user.username}" onclick="openUserProfileModal('${user.uid}')" style="cursor: pointer;">
-          <div class="friend-info" onclick="openUserProfileModal('${user.uid}')" style="cursor: pointer;">
-            <div class="friend-name">${user.username}</div>
-            <div class="friend-status online">ID: ${user.uid} • Level ${user.level} • ${user.country}</div>
-          </div>
-          <div class="friend-actions">
-            <button class="btn-primary" style="padding: 8px 20px; font-size: 0.8rem;" onclick="handleSendFriendRequest('${user.uid}')">ADD FRIEND</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function handleSendFriendRequest(targetUid) {
-      OJHA_BACKEND.sendFriendRequest(playerState.uid, targetUid).then(() => {
-        showToast('Friend request sent!', 'success');
-        buildFriendsList(currentFriendsTab);
-      }).catch(err => {
-        showToast(err.message || 'Could not send request.', 'info');
-      });
-    }
-
-    function handleAcceptFriendRequest(reqId) {
-      OJHA_BACKEND.acceptFriendRequest(reqId).then(() => {
-        showToast('Friend request accepted!', 'success');
-        buildFriendsList(currentFriendsTab);
-        buildLeaderboard();
-      }).catch(err => {
-        showToast(err.message || 'Could not accept request.', 'info');
-      });
-    }
-
-    function handleRejectFriendRequest(reqId) {
-      OJHA_BACKEND.rejectFriendRequest(reqId).then(() => {
-        showToast('Friend request rejected.', 'info');
-        buildFriendsList(currentFriendsTab);
-      });
-    }
-
-    function handleRemoveFriend(targetUid) {
-      if (confirm('Are you sure you want to remove this friend?')) {
-        OJHA_BACKEND.removeFriend(playerState.uid, targetUid).then(() => {
-          showToast('Friend removed.', 'info');
-          buildFriendsList(currentFriendsTab);
-          buildLeaderboard();
-        });
-      }
-    }
+    function handleRemoveFriend(targetUid) { return; }
 
     function openUserProfileModal(uid) {
       const user = OJHA_BACKEND.getUserProfile(uid);
@@ -5570,14 +5087,9 @@ body.bb-profile-native .bg-layer::after {
       setTextIfPresent('statAvgScore', playerState.avgScore.toLocaleString());
       updatePremiumProfileDashboard();
       
-      // Account type
+      // Profile type (local only, no login)
       const accTypeEl = document.getElementById('accountType');
-      if (accTypeEl) accTypeEl.textContent = (playerState.accountType || 'guest').toUpperCase();
-
-      const linkRow = document.getElementById('linkGoogleRow');
-      if (linkRow) {
-        linkRow.style.display = playerState.accountType === 'guest' ? 'flex' : 'none';
-      }
+      if (accTypeEl) accTypeEl.textContent = (playerState.name || 'PLAYER').toUpperCase();
     }
 
     function formatTime(seconds) {
@@ -5621,9 +5133,14 @@ body.bb-profile-native .bg-layer::after {
       const intro = document.getElementById('importPage');
       if (!intro) return;
 
-      const introVideo = document.getElementById('introBgVideo');
       const startup = document.getElementById('startupVideo');
-      const enterBtns = [document.getElementById('introEnterBtn'), document.getElementById('introEnterBtnFooter')];
+      const enterBtn = document.getElementById('introEnterBtn');
+
+      // Lock scroll while intro is visible — single page, no scrolling.
+      const prevBodyOverflow = document.body.style.overflow;
+      const prevHtmlOverflow = document.documentElement.style.overflow;
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
 
       // Keep the ORIGINAL startup video paused & reset while intro is shown,
       // so it plays exactly as before once the user enters.
@@ -5633,34 +5150,7 @@ body.bb-profile-native .bg-layer::after {
       };
       resetStartup();
 
-      // Autoplay + loop retry for the intro background video
-      const playIntroVideo = () => {
-        if (!introVideo) return;
-        introVideo.muted = true;
-        introVideo.loop = true;
-        introVideo.playsInline = true;
-        const attempt = introVideo.play();
-        if (attempt && typeof attempt.catch === 'function') attempt.catch(() => {});
-      };
-      playIntroVideo();
-      document.addEventListener('DOMContentLoaded', playIntroVideo);
-      window.addEventListener('load', playIntroVideo);
-
-      // Smooth scroll-reveal animations (scoped to the intro page)
-      const revealEls = intro.querySelectorAll('[data-reveal]');
-      if ('IntersectionObserver' in window) {
-        const io = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('revealed');
-              io.unobserve(entry.target);
-            }
-          });
-        }, { root: intro, threshold: 0.15 });
-        revealEls.forEach((el) => io.observe(el));
-      } else {
-        revealEls.forEach((el) => el.classList.add('revealed'));
-      }
+      // No intro video anymore — poster image is the background (CSS).
 
       let entered = false;
       function enterWebsite() {
@@ -5673,7 +5163,8 @@ body.bb-profile-native .bg-layer::after {
         setTimeout(() => {
           intro.classList.add('gone');
           intro.style.display = 'none';
-          if (introVideo && !introVideo.paused) introVideo.pause();
+          document.body.style.overflow = prevBodyOverflow;
+          document.documentElement.style.overflow = prevHtmlOverflow;
 
           // Hand over to the EXISTING flow: original loading screen video
           // starts from the beginning, exactly as it always did.
@@ -5685,9 +5176,7 @@ body.bb-profile-native .bg-layer::after {
         }, 1100);
       }
 
-      enterBtns.forEach((btn) => {
-        if (btn) btn.addEventListener('click', enterWebsite);
-      });
+      if (enterBtn) enterBtn.addEventListener('click', enterWebsite);
     })();
   </script>
 </body>

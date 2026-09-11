@@ -3,416 +3,565 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Curved CRT Retro Snake Game</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>Pac-Man Arcade Edition</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-
-        body, html {
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Press Start 2P', monospace;
-        }
-
-        /* WebGL Fullscreen CRT Canvas */
-        #crtCanvas {
-            width: 100vw;
-            height: 100vh;
-            display: block;
-        }
-
-        /* Hidden 2D Canvas used as a WebGL Texture Source */
-        #gameCanvas {
-            display: none;
-        }
-
-        /* Overlay UI Styling */
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(3, 18, 8, 0.85);
+        body {
+            background-color: #000000;
+            color: #FFFFFF;
+            font-family: 'Courier New', Courier, monospace;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
-            z-index: 10;
-            color: #33ff66;
-            text-shadow: 0 0 12px rgba(51, 255, 102, 0.8);
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
         }
-
-        .overlay h1 {
-            font-size: 20px;
-            margin-bottom: 24px;
-            line-height: 1.8;
-            letter-spacing: 2px;
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 4px solid #FFFF00;
+            padding: 16px;
+            background-color: #000000;
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.3);
+            border-radius: 8px;
         }
-
-        .btn {
-            background-color: #33ff66;
-            color: #031208;
-            border: none;
-            padding: 16px 32px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 12px;
-            cursor: pointer;
+        #ui-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
             font-weight: bold;
-            box-shadow: 0 0 20px rgba(51, 255, 102, 0.6);
-            transition: all 0.2s;
+            font-size: 18px;
+            letter-spacing: 1px;
         }
-
-        .btn:hover {
-            background-color: #ffffff;
-            box-shadow: 0 0 30px #ffffff;
-            transform: scale(1.05);
+        .highlight {
+            color: #FFFF00;
         }
-
-        .controls-hint {
-            font-size: 10px;
-            margin-top: 24px;
-            color: #21a842;
-            line-height: 1.8;
+        canvas {
+            background-color: #000000;
+            border: 2px solid #1919A6;
+            display: block;
+        }
+        #controls-info {
+            margin-top: 14px;
+            font-size: 13px;
+            text-align: center;
+            color: #FFFFFF;
+            font-weight: bold;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Onscreen WebGL Canvas with Real 3D Curved CRT Shader -->
-    <canvas id="crtCanvas"></canvas>
-
-    <!-- Offscreen 2D Buffer Canvas -->
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-
-    <!-- Start / Pause Overlays -->
-    <div id="startOverlay" class="overlay">
-        <h1>3D CURVED CRT SNAKE<br><br>PRESS START</h1>
-        <button class="btn" id="startBtn">START GAME</button>
-        <div class="controls-hint">
-            ARROW KEYS / WASD TO MOVE<br>
-            SPACEBAR TO PAUSE<br>
-            WALLS & SELF-BITING ARE PASS-THROUGH (NO DEATH)
-        </div>
+<div id="game-container">
+    <div id="ui-header">
+        <div>SCORE: <span id="score" class="highlight">00</span></div>
+        <div>HIGH SCORE: <span id="high-score" class="highlight">00</span></div>
+        <div>LIVES: <span id="lives" class="highlight">3</span></div>
     </div>
-
-    <div id="pauseOverlay" class="overlay" style="display: none;">
-        <h1>GAME PAUSED<br><br>PRESS SPACE TO RESUME</h1>
+    <canvas id="canvas" width="448" height="496"></canvas>
+    <div id="controls-info">
+        USE <b>ARROW KEYS</b> OR <b>WASD</b> TO NAVIGATE
     </div>
+</div>
 
-    <!-- WebGL Shaders for 3D CRT Glass Curvature -->
-    <script id="vs" type="x-shader/x-vertex">
-        attribute vec2 position;
-        varying vec2 vUv;
-        void main() {
-            vUv = position * 0.5 + 0.5;
-            vUv.y = 1.0 - vUv.y; // Match WebGL coordinate system
-            gl_Position = vec4(position, 0.0, 1.0);
-        }
-    </script>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const highScoreEl = document.getElementById('high-score');
+const livesEl = document.getElementById('lives');
 
-    <script id="fs" type="x-shader/x-fragment">
-        precision mediump float;
-        uniform sampler2D uTexture;
-        uniform float uTime;
-        varying vec2 vUv;
+const TILE_SIZE = 16;
+const SPEED = 2; // Smooth pixel movement per frame
 
-        // Realistic 3D CRT Glass Barrel Distortion Algorithm
-        vec2 curveUV(vec2 uv) {
-            uv = uv * 2.0 - 1.0;
-            // Stretch edges outwards while keeping center linear
-            vec2 offset = abs(uv.yx) / vec2(5.5, 3.8);
-            uv = uv + uv * offset * offset;
-            uv = uv * 0.5 + 0.5;
-            return uv;
-        }
+// 28 cols x 31 rows classic Pac-Man grid layout
+// 1: Wall, 0: Pellet, 2: Power Pellet, 3: Empty, 4: Ghost Door, 5: Ghost House
+const map = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+    [1,2,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,2,1],
+    [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+    [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,0,1,1,1,1,1,3,1,1,3,1,1,1,1,1,0,1,1,1,1,1,1],
+    [3,3,3,3,3,1,0,1,1,1,1,1,3,1,1,3,1,1,1,1,1,0,1,3,3,3,3,3],
+    [3,3,3,3,3,1,0,1,1,3,3,3,3,3,3,3,3,3,3,1,1,0,1,3,3,3,3,3],
+    [3,3,3,3,3,1,0,1,1,3,1,1,1,4,4,1,1,1,3,1,1,0,1,3,3,3,3,3],
+    [1,1,1,1,1,1,0,1,1,3,1,5,5,5,5,5,5,1,3,1,1,0,1,1,1,1,1,1],
+    [3,3,3,3,3,3,0,3,3,3,1,5,5,5,5,5,5,1,3,3,3,0,3,3,3,3,3,3],
+    [1,1,1,1,1,1,0,1,1,3,1,5,5,5,5,5,5,1,3,1,1,0,1,1,1,1,1,1],
+    [3,3,3,3,3,1,0,1,1,3,1,1,1,1,1,1,1,1,3,1,1,0,1,3,3,3,3,3],
+    [3,3,3,3,3,1,0,1,1,3,3,3,3,3,3,3,3,3,3,1,1,0,1,3,3,3,3,3],
+    [3,3,3,3,3,1,0,1,1,3,1,1,1,1,1,1,1,1,3,1,1,0,1,3,3,3,3,3],
+    [1,1,1,1,1,1,0,1,1,3,1,1,1,1,1,1,1,1,3,1,1,0,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+    [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+    [1,2,0,0,1,1,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,1,1,0,0,2,1],
+    [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+    [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+    [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+    [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+    [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
 
-        void main() {
-            vec2 uv = curveUV(vUv);
+let grid = [];
+let score = 0;
+let highScore = localStorage.getItem('pacman_high_score') || 0;
+let lives = 3;
+let gameOver = false;
+let gameWon = false;
+let frightenTimer = 0;
+const frightenDuration = 360; // 6 seconds at 60fps
+let ghostEatenMultiplier = 1;
+let globalFrameCount = 0;
 
-            // Dark bevel border outside screen curvature
-            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-                gl_FragColor = vec4(0.01, 0.04, 0.01, 1.0);
-                return;
-            }
+const DIR_UP = { x: 0, y: -1 };
+const DIR_DOWN = { x: 0, y: 1 };
+const DIR_LEFT = { x: -1, y: 0 };
+const DIR_RIGHT = { x: 1, y: 0 };
+const DIR_NONE = { x: 0, y: 0 };
 
-            vec4 col = texture2D(uTexture, uv);
+class Pacman {
+    constructor() {
+        this.reset();
+    }
 
-            // Warped Scanline Effect following curved CRT geometry
-            float scanline = sin(uv.y * 400.0 * 3.14159) * 0.18;
-            col.rgb -= scanline;
+    reset() {
+        this.x = 13.5 * TILE_SIZE;
+        this.y = 23 * TILE_SIZE;
+        this.dir = DIR_NONE;
+        this.nextDir = DIR_NONE;
+        this.mouthAngle = 0.2;
+        this.mouthSpeed = 0.02;
+    }
 
-            // CRT Spherical Tube Vignette Shadow
-            vec2 centerUV = uv - 0.5;
-            float vignette = 1.0 - dot(centerUV, centerUV) * 0.75;
-            col.rgb *= vignette;
-
-            // Screen Reflection Sheen / Glare Light
-            float glare = max(0.0, (0.5 - length(uv - vec2(0.25, 0.25)))) * 0.12;
-            col.rgb += vec2(0.1, 0.3) * glare;
-
-            // Green Monochrome Phosphor Tint
-            col.r *= 0.35;
-            col.b *= 0.35;
-            col.g = pow(col.g, 0.85) * 1.15;
-
-            // Subtle analogue signal noise flickering
-            float noise = fract(sin(dot(uv * uTime, vec2(12.9898, 78.233))) * 43758.5453) * 0.02;
-            col.rgb += noise;
-
-            gl_FragColor = vec4(col.rgb, 1.0);
-        }
-    </script>
-
-    <script>
-        // --- Game Setup & Loop ---
-        const gameCanvas = document.getElementById('gameCanvas');
-        const gCtx = gameCanvas.getContext('2d');
-
-        const gridSize = 20;
-        const tileCountX = gameCanvas.width / gridSize;
-        const tileCountY = gameCanvas.height / gridSize;
-
-        let snake = [];
-        let food = { x: 0, y: 0 };
-        let dx = 1;
-        let dy = 0;
-        let score = 0;
-        let highScore = localStorage.getItem('3d_crt_snake_hi') || 0;
-        let isPaused = false;
-        let isRunning = false;
-        let changingDirection = false;
-
-        const startOverlay = document.getElementById('startOverlay');
-        const pauseOverlay = document.getElementById('pauseOverlay');
-        const startBtn = document.getElementById('startBtn');
-
-        // Synth Retro Audio via Web Audio API
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-
-            if (type === 'eat') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
-                gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.08);
+    update() {
+        // Precise corner alignment check for smooth turns
+        if (this.x % TILE_SIZE === 0 && this.y % TILE_SIZE === 0) {
+            if (this.canMove(this.nextDir)) {
+                this.dir = this.nextDir;
             }
         }
 
-        function initGame() {
-            snake = [
-                { x: 15, y: 15 },
-                { x: 14, y: 15 },
-                { x: 13, y: 15 },
-                { x: 12, y: 15 }
-            ];
-            dx = 1;
-            dy = 0;
-            score = 0;
-            createFood();
+        if (this.canMove(this.dir)) {
+            this.x += this.dir.x * SPEED;
+            this.y += this.dir.y * SPEED;
+
+            // Mouth Animation Cycle
+            this.mouthAngle += this.mouthSpeed;
+            if (this.mouthAngle > 0.45 || this.mouthAngle < 0.03) {
+                this.mouthSpeed = -this.mouthSpeed;
+            }
         }
 
-        function createFood() {
-            food.x = Math.floor(Math.random() * tileCountX);
-            food.y = Math.floor(Math.random() * tileCountY);
-            snake.forEach(part => {
-                if (part.x === food.x && part.y === food.y) createFood();
-            });
-        }
+        // Wrap Around Tunnel Logic
+        if (this.x < -TILE_SIZE / 2) this.x = canvas.width - TILE_SIZE / 2;
+        if (this.x > canvas.width - TILE_SIZE / 2) this.x = -TILE_SIZE / 2;
 
-        function updateGame() {
-            if (isPaused || !isRunning) return;
+        // Tile Consumption Logic
+        const tileX = Math.floor((this.x + TILE_SIZE / 2) / TILE_SIZE);
+        const tileY = Math.floor((this.y + TILE_SIZE / 2) / TILE_SIZE);
 
-            changingDirection = false;
-
-            // Move Snake Head
-            let head = { x: snake[0].x + dx, y: snake[0].y + dy };
-
-            // Wall Pass-Through (Wrap Around Screen Edges)
-            if (head.x < 0) head.x = tileCountX - 1;
-            if (head.x >= tileCountX) head.x = 0;
-            if (head.y < 0) head.y = tileCountY - 1;
-            if (head.y >= tileCountY) head.y = 0;
-
-            snake.unshift(head);
-
-            // Food Collisions
-            if (head.x === food.x && head.y === food.y) {
+        if (grid[tileY] && grid[tileY][tileX] !== undefined) {
+            if (grid[tileY][tileX] === 0) { // Normal Pellet
+                grid[tileY][tileX] = 3;
                 score += 10;
-                if (score > highScore) {
-                    highScore = score;
-                    localStorage.setItem('3d_crt_snake_hi', highScore);
+                checkWinCondition();
+            } else if (grid[tileY][tileX] === 2) { // Power Pellet
+                grid[tileY][tileX] = 3;
+                score += 50;
+                activateFrightenedMode();
+                checkWinCondition();
+            }
+        }
+
+        scoreEl.innerText = score;
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('pacman_high_score', highScore);
+        }
+        highScoreEl.innerText = highScore;
+    }
+
+    canMove(dir) {
+        if (dir === DIR_NONE) return false;
+        const nextX = this.x + dir.x * SPEED;
+        const nextY = this.y + dir.y * SPEED;
+
+        const left = Math.floor(nextX / TILE_SIZE);
+        const right = Math.floor((nextX + TILE_SIZE - 1) / TILE_SIZE);
+        const top = Math.floor(nextY / TILE_SIZE);
+        const bottom = Math.floor((nextY + TILE_SIZE - 1) / TILE_SIZE);
+
+        // Allow movement within tunnel bounds
+        if (left < 0 || right >= 28) return true;
+
+        const isWall = (tile) => tile === 1 || tile === 4;
+
+        return !isWall(grid[top][left]) &&
+               !isWall(grid[top][right]) &&
+               !isWall(grid[bottom][left]) &&
+               !isWall(grid[bottom][right]);
+    }
+
+    draw() {
+        ctx.fillStyle = '#FFFF00';
+        ctx.beginPath();
+
+        let rotation = 0;
+        if (this.dir === DIR_RIGHT) rotation = 0;
+        if (this.dir === DIR_DOWN) rotation = 0.5 * Math.PI;
+        if (this.dir === DIR_LEFT) rotation = Math.PI;
+        if (this.dir === DIR_UP) rotation = 1.5 * Math.PI;
+
+        const startAngle = rotation + this.mouthAngle * Math.PI;
+        const endAngle = rotation + (2 - this.mouthAngle) * Math.PI;
+
+        ctx.arc(
+            this.x + TILE_SIZE / 2,
+            this.y + TILE_SIZE / 2,
+            TILE_SIZE / 2 - 1,
+            startAngle,
+            endAngle
+        );
+        ctx.lineTo(this.x + TILE_SIZE / 2, this.y + TILE_SIZE / 2);
+        ctx.fill();
+        ctx.closePath();
+    }
+}
+
+class Ghost {
+    constructor(color, homeX, homeY, scatterX, scatterY, releaseDelay) {
+        this.color = color;
+        this.homeX = homeX;
+        this.homeY = homeY;
+        this.scatterX = scatterX;
+        this.scatterY = scatterY;
+        this.releaseDelay = releaseDelay;
+        this.reset();
+    }
+
+    reset() {
+        this.x = this.homeX * TILE_SIZE;
+        this.y = this.homeY * TILE_SIZE;
+        this.dir = DIR_UP;
+        this.isFrightened = false;
+        this.isEaten = false;
+        this.inHouse = this.color !== '#FF0000';
+        this.houseTimer = 0;
+    }
+
+    update() {
+        if (this.inHouse) {
+            this.houseTimer++;
+            // Vertical bobbing inside ghost house
+            if (this.y <= 13.5 * TILE_SIZE) this.dir = DIR_DOWN;
+            if (this.y >= 14.5 * TILE_SIZE) this.dir = DIR_UP;
+            this.y += this.dir.y * (SPEED / 2);
+
+            // Staggered release mechanism
+            if (this.houseTimer > this.releaseDelay || frightenTimer > 0) {
+                this.inHouse = false;
+                this.x = 13.5 * TILE_SIZE;
+                this.y = 11 * TILE_SIZE;
+                this.dir = DIR_LEFT;
+            }
+            return;
+        }
+
+        // Decision point at tile intersection
+        if (this.x % TILE_SIZE === 0 && this.y % TILE_SIZE === 0) {
+            let targetX, targetY;
+
+            if (this.isEaten) {
+                // Return to Ghost House
+                targetX = 13.5 * TILE_SIZE;
+                targetY = 11 * TILE_SIZE;
+                if (Math.abs(this.x - targetX) < 2 && Math.abs(this.y - targetY) < 2) {
+                    this.isEaten = false;
+                    this.isFrightened = false;
                 }
-                playSound('eat');
-                createFood();
+            } else if (this.isFrightened) {
+                // Pseudo-random movement during frightened state
+                targetX = Math.floor(Math.random() * 28) * TILE_SIZE;
+                targetY = Math.floor(Math.random() * 31) * TILE_SIZE;
             } else {
-                snake.pop();
-            }
-        }
-
-        function drawGame() {
-            // Background phosphor grid
-            gCtx.fillStyle = '#031208';
-            gCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-
-            gCtx.strokeStyle = '#082810';
-            gCtx.lineWidth = 1;
-            for (let i = 0; i < gameCanvas.width; i += gridSize) {
-                gCtx.beginPath(); gCtx.moveTo(i, 0); gCtx.lineTo(i, gameCanvas.height); gCtx.stroke();
-            }
-            for (let j = 0; j < gameCanvas.height; j += gridSize) {
-                gCtx.beginPath(); gCtx.moveTo(0, j); gCtx.lineTo(gameCanvas.width, j); gCtx.stroke();
-            }
-
-            // Draw HUD
-            gCtx.font = '14px "Press Start 2P"';
-            gCtx.fillStyle = '#33ff66';
-            gCtx.shadowColor = '#33ff66';
-            gCtx.shadowBlur = 8;
-            gCtx.fillText(`SCORE:${score}`, 20, 35);
-            gCtx.fillText(`HI:${highScore}`, gameCanvas.width - 180, 35);
-
-            // Draw Food
-            gCtx.fillStyle = '#ffff33';
-            gCtx.shadowColor = '#ffff33';
-            gCtx.shadowBlur = 12;
-            gCtx.beginPath();
-            gCtx.arc(food.x * gridSize + gridSize/2, food.y * gridSize + gridSize/2, gridSize/2 - 2, 0, Math.PI * 2);
-            gCtx.fill();
-
-            // Draw Snake
-            snake.forEach((part, index) => {
-                gCtx.fillStyle = index === 0 ? '#b3ffcc' : '#33ff66';
-                gCtx.shadowColor = '#33ff66';
-                gCtx.shadowBlur = index === 0 ? 12 : 6;
-                gCtx.fillRect(part.x * gridSize + 1, part.y * gridSize + 1, gridSize - 2, gridSize - 2);
-            });
-
-            gCtx.shadowBlur = 0;
-        }
-
-        // --- Keyboard Controls ---
-        document.addEventListener('keydown', (e) => {
-            if (e.keyCode === 32) { // Spacebar for Pause
-                if (isRunning) {
-                    isPaused = !isPaused;
-                    pauseOverlay.style.display = isPaused ? 'flex' : 'none';
+                // Classic Ghost Targeting Logic
+                if (this.color === '#FF0000') { // Blinky (Direct Pursuit)
+                    targetX = pacman.x;
+                    targetY = pacman.y;
+                } else if (this.color === '#FFB8FF') { // Pinky (4 tiles ahead)
+                    targetX = pacman.x + pacman.dir.x * 4 * TILE_SIZE;
+                    targetY = pacman.y + pacman.dir.y * 4 * TILE_SIZE;
+                } else if (this.color === '#00FFFF') { // Inky (Flank vector via Blinky)
+                    const bX = ghosts[0].x;
+                    const bY = ghosts[0].y;
+                    const pX = pacman.x + pacman.dir.x * 2 * TILE_SIZE;
+                    const pY = pacman.y + pacman.dir.y * 2 * TILE_SIZE;
+                    targetX = pX + (pX - bX);
+                    targetY = pY + (pY - bY);
+                } else { // Clyde (Proximity switch: Chase -> Corner)
+                    const distance = Math.hypot(this.x - pacman.x, this.y - pacman.y);
+                    if (distance > 8 * TILE_SIZE) {
+                        targetX = pacman.x;
+                        targetY = pacman.y;
+                    } else {
+                        targetX = this.scatterX * TILE_SIZE;
+                        targetY = this.scatterY * TILE_SIZE;
+                    }
                 }
-                return;
             }
 
-            if (isPaused || changingDirection || !isRunning) return;
-
-            const LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
-            const W = 87, A = 65, S = 83, D = 68;
-
-            if ((e.keyCode === LEFT || e.keyCode === A) && dx !== 1) { dx = -1; dy = 0; changingDirection = true; }
-            if ((e.keyCode === UP || e.keyCode === W) && dy !== 1) { dx = 0; dy = -1; changingDirection = true; }
-            if ((e.keyCode === RIGHT || e.keyCode === D) && dx !== -1) { dx = 1; dy = 0; changingDirection = true; }
-            if ((e.keyCode === DOWN || e.keyCode === S) && dy !== -1) { dx = 0; dy = 1; changingDirection = true; }
-        });
-
-        startBtn.addEventListener('click', () => {
-            startOverlay.style.display = 'none';
-            isRunning = true;
-            isPaused = false;
-            initGame();
-        });
-
-        // --- WebGL Shader Renderer Pipeline ---
-        const crtCanvas = document.getElementById('crtCanvas');
-        const gl = crtCanvas.getContext('webgl');
-
-        function resizeCanvas() {
-            crtCanvas.width = window.innerWidth;
-            crtCanvas.height = window.innerHeight;
-            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-        }
-        window.addEventListener('resize', resizeCanvas);
-
-        function createShader(gl, type, source) {
-            const shader = gl.createShader(type);
-            gl.shaderSource(shader, source);
-            gl.compileShader(shader);
-            return shader;
+            this.chooseNextDirection(targetX, targetY);
         }
 
-        const vsSource = document.getElementById('vs').text;
-        const fsSource = document.getElementById('fs').text;
-        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
-        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+        const currentSpeed = this.isEaten ? SPEED * 2 : (this.isFrightened ? SPEED / 2 : SPEED);
+        this.x += this.dir.x * currentSpeed;
+        this.y += this.dir.y * currentSpeed;
 
-        const program = gl.createProgram();
-        gl.attachShader(program, vertexShader);
-        gl.attachShader(program, fragmentShader);
-        gl.linkProgram(program);
-        gl.useProgram(program);
+        // Tunnel Wrap
+        if (this.x < -TILE_SIZE / 2) this.x = canvas.width - TILE_SIZE / 2;
+        if (this.x > canvas.width - TILE_SIZE / 2) this.x = -TILE_SIZE / 2;
+    }
 
-        const positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            -1, -1,  1, -1, -1,  1,
-            -1,  1,  1, -1,  1,  1,
-        ]), gl.STATIC_DRAW);
+    chooseNextDirection(targetX, targetY) {
+        const directions = [DIR_UP, DIR_LEFT, DIR_DOWN, DIR_RIGHT];
+        let bestDir = this.dir;
+        let minDistance = Infinity;
 
-        const positionLocation = gl.getAttribLocation(program, 'position');
-        gl.enableVertexAttribArray(positionLocation);
-        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+        for (let d of directions) {
+            // Prevent instant 180-degree turnarounds
+            if (d.x === -this.dir.x && d.y === -this.dir.y && this.dir !== DIR_NONE) continue;
 
-        // Texture Setup
-        const texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            const nextX = this.x + d.x * TILE_SIZE;
+            const nextY = this.y + d.y * TILE_SIZE;
 
-        const uTimeLocation = gl.getUniformLocation(program, 'uTime');
+            const tileX = Math.floor(nextX / TILE_SIZE);
+            const tileY = Math.floor(nextY / TILE_SIZE);
 
-        resizeCanvas();
-
-        // Game Speed & WebGL Render Loops
-        let lastGameTick = 0;
-        const gameSpeed = 90; // ms per frame
-
-        function renderLoop(time) {
-            if (time - lastGameTick > gameSpeed) {
-                updateGame();
-                drawGame();
-                lastGameTick = time;
+            if (tileX >= 0 && tileX < 28 && tileY >= 0 && tileY < 31) {
+                const cell = grid[tileY][tileX];
+                if (cell === 1 || (cell === 4 && !this.isEaten)) continue; // Blocked by walls/door
             }
 
-            // Upload 2D game canvas as WebGL texture
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, gameCanvas);
+            const distance = Math.hypot(nextX - targetX, nextY - targetY);
+            if (distance < minDistance) {
+                minDistance = distance;
+                bestDir = d;
+            }
+        }
+        this.dir = bestDir;
+    }
 
-            gl.uniform1f(uTimeLocation, time * 0.001);
-            gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-            requestAnimationFrame(renderLoop);
+    draw() {
+        ctx.beginPath();
+        let bodyColor = this.color;
+        
+        if (this.isFrightened) {
+            bodyColor = (frightenTimer < 120 && Math.floor(frightenTimer / 15) % 2 === 0) ? '#FFFFFF' : '#0000FF';
         }
 
-        drawGame();
-        requestAnimationFrame(renderLoop);
-    </script>
+        if (!this.isEaten) {
+            // Ghost Head & Body
+            ctx.fillStyle = bodyColor;
+            ctx.arc(this.x + TILE_SIZE / 2, this.y + TILE_SIZE / 3 + 2, TILE_SIZE / 2 - 1, Math.PI, 0, false);
+            ctx.lineTo(this.x + TILE_SIZE - 1, this.y + TILE_SIZE);
+
+            // Wavy Bottom Skirt
+            const skirtOffset = (globalFrameCount % 10 < 5) ? 0 : 2;
+            ctx.lineTo(this.x + (TILE_SIZE * 3/4), this.y + TILE_SIZE - skirtOffset);
+            ctx.lineTo(this.x + (TILE_SIZE * 2/4), this.y + TILE_SIZE);
+            ctx.lineTo(this.x + (TILE_SIZE * 1/4), this.y + TILE_SIZE - skirtOffset);
+            ctx.lineTo(this.x, this.y + TILE_SIZE);
+            ctx.fill();
+        }
+
+        // Eyes
+        ctx.fillStyle = '#FFFFFF';
+        const eyeOffsetX = this.dir.x * 2;
+        const eyeOffsetY = this.dir.y * 2;
+
+        ctx.beginPath();
+        ctx.arc(this.x + 5 + eyeOffsetX, this.y + 6 + eyeOffsetY, 3, 0, Math.PI * 2);
+        ctx.arc(this.x + 11 + eyeOffsetX, this.y + 6 + eyeOffsetY, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pupils
+        ctx.fillStyle = '#0000FF';
+        ctx.beginPath();
+        ctx.arc(this.x + 5 + eyeOffsetX * 1.5, this.y + 6 + eyeOffsetY * 1.5, 1.5, 0, Math.PI * 2);
+        ctx.arc(this.x + 11 + eyeOffsetX * 1.5, this.y + 6 + eyeOffsetY * 1.5, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+const pacman = new Pacman();
+const ghosts = [
+    new Ghost('#FF0000', 13.5, 11, 27, 0, 0),     // Blinky (Red)
+    new Ghost('#FFB8FF', 13.5, 14, 0, 0, 100),   // Pinky (Pink)
+    new Ghost('#00FFFF', 11.5, 14, 27, 31, 200),  // Inky (Cyan)
+    new Ghost('#FFB852', 15.5, 14, 0, 31, 300)   // Clyde (Orange)
+];
+
+function initGrid() {
+    grid = map.map(row => [...row]);
+}
+
+function activateFrightenedMode() {
+    frightenTimer = frightenDuration;
+    ghostEatenMultiplier = 1;
+    ghosts.forEach(ghost => {
+        if (!ghost.isEaten) {
+            ghost.isFrightened = true;
+        }
+    });
+}
+
+function checkCollisions() {
+    ghosts.forEach(ghost => {
+        const dist = Math.hypot(pacman.x - ghost.x, pacman.y - ghost.y);
+        if (dist < TILE_SIZE * 0.7) {
+            if (ghost.isFrightened && !ghost.isEaten) {
+                ghost.isEaten = true;
+                ghost.isFrightened = false;
+                score += 200 * ghostEatenMultiplier;
+                ghostEatenMultiplier *= 2;
+            } else if (!ghost.isEaten) {
+                lives--;
+                livesEl.innerText = lives;
+                if (lives <= 0) {
+                    gameOver = true;
+                } else {
+                    resetPositions();
+                }
+            }
+        }
+    });
+}
+
+function resetPositions() {
+    pacman.reset();
+    ghosts.forEach(g => g.reset());
+}
+
+function checkWinCondition() {
+    for (let r = 0; r < 31; r++) {
+        for (let c = 0; c < 28; c++) {
+            if (grid[r][c] === 0 || grid[r][c] === 2) return;
+        }
+    }
+    gameWon = true;
+}
+
+function drawMap() {
+    for (let r = 0; r < 31; r++) {
+        for (let c = 0; c < 28; c++) {
+            const cell = grid[r][c];
+            if (cell === 1) { // Maze Wall
+                ctx.fillStyle = '#1919A6';
+                ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            } else if (cell === 4) { // Ghost Gate
+                ctx.fillStyle = '#FFB8FF';
+                ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE + 6, TILE_SIZE, 4);
+            } else if (cell === 0) { // Pellet
+                ctx.fillStyle = '#FFB8AE';
+                ctx.beginPath();
+                ctx.arc(c * TILE_SIZE + TILE_SIZE / 2, r * TILE_SIZE + TILE_SIZE / 2, 2, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (cell === 2) { // Power Pellet
+                if (Math.floor(globalFrameCount / 15) % 2 === 0) { // Flashing effect
+                    ctx.fillStyle = '#FFB8AE';
+                    ctx.beginPath();
+                    ctx.arc(c * TILE_SIZE + TILE_SIZE / 2, r * TILE_SIZE + TILE_SIZE / 2, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+    }
+}
+
+// Input Controllers
+window.addEventListener('keydown', e => {
+    switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+            pacman.nextDir = DIR_UP;
+            break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+            pacman.nextDir = DIR_DOWN;
+            break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+            pacman.nextDir = DIR_LEFT;
+            break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+            pacman.nextDir = DIR_RIGHT;
+            break;
+    }
+});
+
+function gameLoop() {
+    globalFrameCount++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!gameOver && !gameWon) {
+        if (frightenTimer > 0) {
+            frightenTimer--;
+            if (frightenTimer === 0) {
+                ghosts.forEach(g => g.isFrightened = false);
+            }
+        }
+
+        pacman.update();
+        ghosts.forEach(ghost => ghost.update());
+        checkCollisions();
+    }
+
+    drawMap();
+    pacman.draw();
+    ghosts.forEach(ghost => ghost.draw());
+
+    if (gameOver) {
+        ctx.fillStyle = '#FF0000';
+        ctx.font = 'bold 28px "Courier New"';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 + 8);
+    } else if (gameWon) {
+        ctx.fillStyle = '#FFFF00';
+        ctx.font = 'bold 28px "Courier New"';
+        ctx.textAlign = 'center';
+        ctx.fillText('YOU WIN!', canvas.width / 2, canvas.height / 2 + 8);
+    } else {
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+// Game Initialization
+initGrid();
+requestAnimationFrame(gameLoop);
+
+</script>
 </body>
 </html>
